@@ -14,7 +14,13 @@ function shoeBoxDesigner() {
             tuckFlap: 20,   // Tuck flap width (for LID side tucks)
             tuckRound: 8,   // Tuck flap corner roundness (for LID side tucks)
             lidFlapWidth: 50, // Lid flap height (min = 50mm, max = H)
-            lidTuckRadius: 25 // Lid tuck corner radius (max = lidFlapWidth)
+            lidTuckRadius: 25, // Lid tuck corner radius (max = lidFlapWidth)
+            // Double wall lock system
+            lockEnabled: true,  // Toggle lock system
+            lockCount: 2,       // Number of locks (1-3)
+            lockLength: 30,     // Length of each lock tab
+            lockGap: 20,        // Gap between locks
+            slotWidth: 3        // Width of slots (and lock tabs)
         },
 
         display: {
@@ -44,13 +50,23 @@ function shoeBoxDesigner() {
             const tuckR = Math.min(parseFloat(this.box.tuckRound), tuck); // Tuck roundness: max = tuck width
             const lidW = Math.max(50, Math.min(parseFloat(this.box.lidFlapWidth), H)); // Lid flap width: min 50, max H
             const lidR = Math.min(parseFloat(this.box.lidTuckRadius), lidW); // Lid tuck radius: max = lidW
+
+            // Double wall lock system parameters
+            const lockEnabled = this.box.lockEnabled;
+            const lockCount = parseInt(this.box.lockCount);
+            const lockLength = parseFloat(this.box.lockLength);
+            const lockGap = parseFloat(this.box.lockGap);
+            const slotWidth = parseFloat(this.box.slotWidth);
+
             const scale = parseFloat(this.display.scale);
 
             const padding = 60;
 
             // Pattern dimensions - accommodate widest elements on sides
             // Left/right side needs room for: lidW (lid tuck squares), tuck (top row), dust (front/back), 2*H (base side walls)
-            const sideWidth = Math.max(lidW, tuck, dust, 2 * H);
+            // Add slotWidth when locks enabled (lock tabs protrude beyond side walls)
+            const baseSideWidth = Math.max(lidW, tuck, dust, 2 * H);
+            const sideWidth = lockEnabled ? baseSideWidth + slotWidth : baseSideWidth;
             // Width: sideWidth + L + sideWidth
             // Height: lidW (lid flap) + W (lid top) + H (front wall) + W (base) + H (back wall)
             const patternW = L + 2 * sideWidth;
@@ -214,6 +230,36 @@ function shoeBoxDesigner() {
             folds.push(`M ${ox} ${y4} L ${ox + L} ${y4}`);
 
             // ==========================================
+            // DOUBLE WALL LOCK SYSTEM
+            // Lock tabs protrude from outer side walls (xL2/xR2)
+            // Slots are at base-to-inner-panel fold lines (ox/ox+L)
+            // ==========================================
+            if (lockEnabled) {
+                // Calculate total height needed for locks and gaps
+                const totalLockHeight = (lockCount * lockLength) + ((lockCount - 1) * lockGap);
+                // Start Y position (centered vertically on base row)
+                const lockStartY = y3 + (W - totalLockHeight) / 2;
+
+                // Generate locks and slots for each position
+                for (let i = 0; i < lockCount; i++) {
+                    const lockY = lockStartY + i * (lockLength + lockGap);
+                    const lockYEnd = lockY + lockLength;
+
+                    // LEFT SIDE
+                    // Lock tab: protrudes left from outer side wall edge (xL2)
+                    cuts.push(`M ${xL2} ${lockY} L ${xL2 - slotWidth} ${lockY} L ${xL2 - slotWidth} ${lockYEnd} L ${xL2} ${lockYEnd}`);
+                    // Slot: at base fold line (ox), cuts through the fold
+                    cuts.push(`M ${ox - slotWidth} ${lockY} L ${ox + slotWidth} ${lockY} L ${ox + slotWidth} ${lockYEnd} L ${ox - slotWidth} ${lockYEnd}`);
+
+                    // RIGHT SIDE
+                    // Lock tab: protrudes right from outer side wall edge (xR2)
+                    cuts.push(`M ${xR2} ${lockY} L ${xR2 + slotWidth} ${lockY} L ${xR2 + slotWidth} ${lockYEnd} L ${xR2} ${lockYEnd}`);
+                    // Slot: at base fold line (ox + L), cuts through the fold
+                    cuts.push(`M ${ox + L - slotWidth} ${lockY} L ${ox + L + slotWidth} ${lockY} L ${ox + L + slotWidth} ${lockYEnd} L ${ox + L - slotWidth} ${lockYEnd}`);
+                }
+            }
+
+            // ==========================================
             // ROW 5: BACK WALL (LxH) with side wall double-layers
             // ==========================================
             // Left edge
@@ -353,9 +399,12 @@ function shoeBoxDesigner() {
             const dust = (dustPct / 100) * (W / 2);
             const tuck = parseFloat(this.box.tuckFlap);
             const lidW = Math.min(parseFloat(this.box.lidFlapWidth), H);
+            const lockEnabled = this.box.lockEnabled;
+            const slotWidth = parseFloat(this.box.slotWidth);
 
             const padding = 60;
-            const sideWidth = Math.max(lidW, tuck, dust, 2 * H);
+            const baseSideWidth = Math.max(lidW, tuck, dust, 2 * H);
+            const sideWidth = lockEnabled ? baseSideWidth + slotWidth : baseSideWidth;
             const patternW = L + 2 * sideWidth;
             const patternH = lidW + 2 * H + 2 * W;
             const totalW = patternW + padding * 2;
@@ -403,9 +452,12 @@ function shoeBoxDesigner() {
             const dust = (dustPct / 100) * (W / 2);
             const tuck = parseFloat(this.box.tuckFlap);
             const lidW = Math.min(parseFloat(this.box.lidFlapWidth), H);
+            const lockEnabled = this.box.lockEnabled;
+            const slotWidth = parseFloat(this.box.slotWidth);
 
             const padding = 60;
-            const sideWidth = Math.max(lidW, tuck, dust, 2 * H);
+            const baseSideWidth = Math.max(lidW, tuck, dust, 2 * H);
+            const sideWidth = lockEnabled ? baseSideWidth + slotWidth : baseSideWidth;
             const patternW = L + 2 * sideWidth;
             const patternH = lidW + 2 * H + 2 * W;
             const totalW = patternW + padding * 2;

@@ -193,6 +193,52 @@
                     </div>
                 </div>
 
+                <!-- Double Wall Lock System -->
+                <div>
+                    <h2 class="text-lg font-semibold text-gray-800 mb-4">Double Wall Locks</h2>
+                    <div class="space-y-4">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" x-model="box.lockEnabled" class="w-4 h-4 text-indigo-600 rounded">
+                            <span class="text-sm text-gray-700">Enable Lock System</span>
+                        </label>
+                        <div x-show="box.lockEnabled" class="space-y-4">
+                            <div>
+                                <div class="flex justify-between mb-1">
+                                    <label class="text-sm text-gray-600">Number of Locks</label>
+                                    <span class="text-sm font-medium text-indigo-600" x-text="box.lockCount"></span>
+                                </div>
+                                <input type="range" x-model="box.lockCount" min="1" max="3" step="1"
+                                    class="w-full param-slider">
+                            </div>
+                            <div>
+                                <div class="flex justify-between mb-1">
+                                    <label class="text-sm text-gray-600">Lock Length</label>
+                                    <span class="text-sm font-medium text-indigo-600"
+                                        x-text="box.lockLength + ' mm'"></span>
+                                </div>
+                                <input type="range" x-model="box.lockLength" min="10" max="60"
+                                    class="w-full param-slider">
+                            </div>
+                            <div>
+                                <div class="flex justify-between mb-1">
+                                    <label class="text-sm text-gray-600">Gap Between Locks</label>
+                                    <span class="text-sm font-medium text-indigo-600"
+                                        x-text="box.lockGap + ' mm'"></span>
+                                </div>
+                                <input type="range" x-model="box.lockGap" min="5" max="40" class="w-full param-slider">
+                            </div>
+                            <div>
+                                <div class="flex justify-between mb-1">
+                                    <label class="text-sm text-gray-600">Slot Width</label>
+                                    <span class="text-sm font-medium text-indigo-600"
+                                        x-text="box.slotWidth + ' mm'"></span>
+                                </div>
+                                <input type="range" x-model="box.slotWidth" min="2" max="8" class="w-full param-slider">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Display Options -->
                 <div>
                     <h2 class="text-lg font-semibold text-gray-800 mb-4">Display</h2>
