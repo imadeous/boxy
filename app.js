@@ -153,10 +153,10 @@ function shoeBoxDesigner() {
             // ==========================================
             // ROW 3: FRONT WALL (LxH) with dust flaps
             // ==========================================
-            // Left edge
-            cuts.push(`M ${ox} ${y2} L ${ox} ${y3}`);
-            // Right edge
-            cuts.push(`M ${ox + L} ${y2} L ${ox + L} ${y3}`);
+            // Left edge (fold line - dust flap attaches here)
+            folds.push(`M ${ox} ${y2} L ${ox} ${y3}`);
+            // Right edge (fold line - dust flap attaches here)
+            folds.push(`M ${ox + L} ${y2} L ${ox + L} ${y3}`);
 
             // Left dust flap (trapezoid with chamfered outer corners)
             const leftDustOuterTop = y2 + dustOffset;
@@ -342,10 +342,10 @@ function shoeBoxDesigner() {
             // ==========================================
             // ROW 5: BACK WALL (LxH) with side wall double-layers
             // ==========================================
-            // Left edge
-            cuts.push(`M ${ox} ${y4} L ${ox} ${y5}`);
-            // Right edge
-            cuts.push(`M ${ox + L} ${y4} L ${ox + L} ${y5}`);
+            // Left edge (fold line - dust flap attaches here)
+            folds.push(`M ${ox} ${y4} L ${ox} ${y5}`);
+            // Right edge (fold line - dust flap attaches here)
+            folds.push(`M ${ox + L} ${y4} L ${ox + L} ${y5}`);
             // Bottom edge
             cuts.push(`M ${ox} ${y5} L ${ox + L} ${y5}`);
 
