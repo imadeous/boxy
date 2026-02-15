@@ -9,9 +9,12 @@ function shoeBoxDesigner() {
             length: 254,    // L - length of base
             width: 204,     // W - width of base  
             height: 98,     // H - wall height
-            dustFlapPct: 30, // Dust flap width as % (100% = W/2)
-            tuckFlap: 20,   // Tuck flap width
-            tuckRound: 8    // Tuck flap corner roundness
+            dustFlapPct: 50, // Dust flap length as % (100% = W/2)
+            dustOuterWidthPct: 60, // Outer width as % of H (inner width = H)
+            tuckFlap: 20,   // Tuck flap width (for LID side tucks)
+            tuckRound: 8,   // Tuck flap corner roundness (for LID side tucks)
+            lidFlapWidth: 50, // Lid flap height (min = 50mm, max = H)
+            lidTuckRadius: 25 // Lid tuck corner radius (max = lidFlapWidth)
         },
 
         display: {
@@ -31,21 +34,27 @@ function shoeBoxDesigner() {
             const W = parseFloat(this.box.width);
             const H = parseFloat(this.box.height);
             const dustPct = parseFloat(this.box.dustFlapPct);
-            const dust = (dustPct / 100) * (W / 2); // 100% = W/2
-            const dustR = Math.min(5, dust / 3); // Small chamfer based on dust width
+            const dust = (dustPct / 100) * (W / 2); // Flap length: 100% = W/2
+            const dustOuterPct = parseFloat(this.box.dustOuterWidthPct);
+            const dustOuterWidth = (dustOuterPct / 100) * H; // Outer width as % of H
+            const dustInnerWidth = H; // Inner width always equals H
+            const dustOffset = (dustInnerWidth - dustOuterWidth) / 2; // Offset for trapezoid
+            const dustR = Math.min(5, dust / 3); // Small chamfer based on dust length
             const tuck = parseFloat(this.box.tuckFlap);
-            const tuckR = parseFloat(this.box.tuckRound);
+            const tuckR = Math.min(parseFloat(this.box.tuckRound), tuck); // Tuck roundness: max = tuck width
+            const lidW = Math.max(50, Math.min(parseFloat(this.box.lidFlapWidth), H)); // Lid flap width: min 50, max H
+            const lidR = Math.min(parseFloat(this.box.lidTuckRadius), lidW); // Lid tuck radius: max = lidW
             const scale = parseFloat(this.display.scale);
 
             const padding = 60;
 
             // Pattern dimensions - accommodate widest elements on sides
-            // Left/right side needs room for: tuck (lid), dust (front/back), 2*H (base side walls)
-            const sideWidth = Math.max(tuck, dust, 2 * H);
+            // Left/right side needs room for: lidW (lid tuck squares), tuck (top row), dust (front/back), 2*H (base side walls)
+            const sideWidth = Math.max(lidW, tuck, dust, 2 * H);
             // Width: sideWidth + L + sideWidth
-            // Height: H (tuck flap) + W (lid top) + H (front wall) + W (base) + H (back wall) = 3H + 2W
+            // Height: lidW (lid flap) + W (lid top) + H (front wall) + W (base) + H (back wall)
             const patternW = L + 2 * sideWidth;
-            const patternH = 3 * H + 2 * W;
+            const patternH = lidW + 2 * H + 2 * W;
 
             const svgW = (patternW + padding * 2) * scale;
             const svgH = (patternH + padding * 2) * scale;
@@ -58,7 +67,7 @@ function shoeBoxDesigner() {
             const oy = padding;
 
             // Y coordinates of horizontal fold lines (top to bottom)
-            const y1 = oy + H;           // Bottom of tuck flap / top of lid top
+            const y1 = oy + lidW;        // Bottom of lid flap / top of lid top
             const y2 = y1 + W;           // Bottom of lid top / top of front wall
             const y3 = y2 + H;           // Bottom of front wall / top of base
             const y4 = y3 + W;           // Bottom of base / top of back wall
@@ -71,26 +80,32 @@ function shoeBoxDesigner() {
             const xR2 = ox + L + 2 * H;  // Right side wall
 
             // ==========================================
-            // ROW 1: TUCK FLAP (LxH) - main panel is rectangular
+            // ROW 1: LID FLAP SYSTEM (3 distinct shapes)
+            // 1. Left lid tuck (square with rounded top-left corner)
+            // 2. Main rectangle (L x lidW)
+            // 3. Right lid tuck (square with rounded top-right corner)
+            // Controls: lidW (side length of squares), lidR (corner radius)
+            // Inner vertical edges are FOLD lines - outer edges + tuck bottoms are CUT lines
+            // Only main rectangle bottom (ox to ox+L) is fold line to lid top
             // ==========================================
-            // Main tuck flap - simple rectangle (square corners)
-            cuts.push(`M ${ox} ${y1} L ${ox} ${oy} L ${ox + L} ${oy} L ${ox + L} ${y1}`);
 
-            // Left corner tuck tab - rounded outer corners only
-            cuts.push(`M ${ox} ${oy} L ${ox - tuck + tuckR} ${oy}`);
-            cuts.push(`M ${ox - tuck + tuckR} ${oy} Q ${ox - tuck} ${oy} ${ox - tuck} ${oy + tuckR}`);
-            cuts.push(`M ${ox - tuck} ${oy + tuckR} L ${ox - tuck} ${y1 - tuckR}`);
-            cuts.push(`M ${ox - tuck} ${y1 - tuckR} Q ${ox - tuck} ${y1} ${ox - tuck + tuckR} ${y1}`);
-            cuts.push(`M ${ox - tuck + tuckR} ${y1} L ${ox} ${y1}`);
+            // --- SHAPE 1: LEFT LID TUCK - outer left, top, and bottom (not right - that's fold) ---
+            cuts.push(`M ${ox - lidW} ${y1} L ${ox - lidW} ${oy + lidR} Q ${ox - lidW} ${oy} ${ox - lidW + lidR} ${oy} L ${ox} ${oy}`);
+            cuts.push(`M ${ox - lidW} ${y1} L ${ox} ${y1}`);  // Bottom edge of left tuck
 
-            // Right corner tuck tab - rounded outer corners only
-            cuts.push(`M ${ox + L} ${oy} L ${ox + L + tuck - tuckR} ${oy}`);
-            cuts.push(`M ${ox + L + tuck - tuckR} ${oy} Q ${ox + L + tuck} ${oy} ${ox + L + tuck} ${oy + tuckR}`);
-            cuts.push(`M ${ox + L + tuck} ${oy + tuckR} L ${ox + L + tuck} ${y1 - tuckR}`);
-            cuts.push(`M ${ox + L + tuck} ${y1 - tuckR} Q ${ox + L + tuck} ${y1} ${ox + L + tuck - tuckR} ${y1}`);
-            cuts.push(`M ${ox + L + tuck - tuckR} ${y1} L ${ox + L} ${y1}`);
+            // --- SHAPE 2: MAIN LID FLAP RECTANGLE - top edge only (bottom is fold) ---
+            cuts.push(`M ${ox} ${oy} L ${ox + L} ${oy}`);
 
-            // Fold line: tuck flap to lid top
+            // --- SHAPE 3: RIGHT LID TUCK - top, outer right, and bottom (not left - that's fold) ---
+            cuts.push(`M ${ox + L} ${oy} L ${ox + L + lidW - lidR} ${oy} Q ${ox + L + lidW} ${oy} ${ox + L + lidW} ${oy + lidR} L ${ox + L + lidW} ${y1}`);
+            cuts.push(`M ${ox + L} ${y1} L ${ox + L + lidW} ${y1}`);  // Bottom edge of right tuck
+
+            // --- FOLD LINES ---
+            // Fold between left lid tuck and main rectangle
+            folds.push(`M ${ox} ${oy} L ${ox} ${y1}`);
+            // Fold between main rectangle and right lid tuck
+            folds.push(`M ${ox + L} ${oy} L ${ox + L} ${y1}`);
+            // Fold: main lid flap to lid top (only center portion)
             folds.push(`M ${ox} ${y1} L ${ox + L} ${y1}`);
 
             // ==========================================
@@ -127,19 +142,33 @@ function shoeBoxDesigner() {
             // Right edge
             cuts.push(`M ${ox + L} ${y2} L ${ox + L} ${y3}`);
 
-            // Left dust flap (chamfered corners)
-            cuts.push(`M ${ox} ${y2} L ${ox - dust + dustR} ${y2}`);
-            cuts.push(`M ${ox - dust + dustR} ${y2} L ${ox - dust} ${y2 + dustR}`);
-            cuts.push(`M ${ox - dust} ${y2 + dustR} L ${ox - dust} ${y3 - dustR}`);
-            cuts.push(`M ${ox - dust} ${y3 - dustR} L ${ox - dust + dustR} ${y3}`);
-            cuts.push(`M ${ox - dust + dustR} ${y3} L ${ox} ${y3}`);
+            // Left dust flap (trapezoid with chamfered outer corners)
+            const leftDustOuterTop = y2 + dustOffset;
+            const leftDustOuterBottom = y3 - dustOffset;
+            // Top diagonal edge
+            cuts.push(`M ${ox} ${y2} L ${ox - dust + dustR} ${leftDustOuterTop}`);
+            // Top-outer chamfer
+            cuts.push(`M ${ox - dust + dustR} ${leftDustOuterTop} L ${ox - dust} ${leftDustOuterTop + dustR}`);
+            // Outer vertical edge
+            cuts.push(`M ${ox - dust} ${leftDustOuterTop + dustR} L ${ox - dust} ${leftDustOuterBottom - dustR}`);
+            // Bottom-outer chamfer
+            cuts.push(`M ${ox - dust} ${leftDustOuterBottom - dustR} L ${ox - dust + dustR} ${leftDustOuterBottom}`);
+            // Bottom diagonal edge
+            cuts.push(`M ${ox - dust + dustR} ${leftDustOuterBottom} L ${ox} ${y3}`);
 
-            // Right dust flap (chamfered corners)
-            cuts.push(`M ${ox + L} ${y2} L ${ox + L + dust - dustR} ${y2}`);
-            cuts.push(`M ${ox + L + dust - dustR} ${y2} L ${ox + L + dust} ${y2 + dustR}`);
-            cuts.push(`M ${ox + L + dust} ${y2 + dustR} L ${ox + L + dust} ${y3 - dustR}`);
-            cuts.push(`M ${ox + L + dust} ${y3 - dustR} L ${ox + L + dust - dustR} ${y3}`);
-            cuts.push(`M ${ox + L + dust - dustR} ${y3} L ${ox + L} ${y3}`);
+            // Right dust flap (trapezoid with chamfered outer corners)
+            const rightDustOuterTop = y2 + dustOffset;
+            const rightDustOuterBottom = y3 - dustOffset;
+            // Top diagonal edge
+            cuts.push(`M ${ox + L} ${y2} L ${ox + L + dust - dustR} ${rightDustOuterTop}`);
+            // Top-outer chamfer
+            cuts.push(`M ${ox + L + dust - dustR} ${rightDustOuterTop} L ${ox + L + dust} ${rightDustOuterTop + dustR}`);
+            // Outer vertical edge
+            cuts.push(`M ${ox + L + dust} ${rightDustOuterTop + dustR} L ${ox + L + dust} ${rightDustOuterBottom - dustR}`);
+            // Bottom-outer chamfer
+            cuts.push(`M ${ox + L + dust} ${rightDustOuterBottom - dustR} L ${ox + L + dust - dustR} ${rightDustOuterBottom}`);
+            // Bottom diagonal edge
+            cuts.push(`M ${ox + L + dust - dustR} ${rightDustOuterBottom} L ${ox + L} ${y3}`);
 
             // Fold line: front wall to base
             folds.push(`M ${ox} ${y3} L ${ox + L} ${y3}`);
@@ -194,19 +223,33 @@ function shoeBoxDesigner() {
             // Bottom edge
             cuts.push(`M ${ox} ${y5} L ${ox + L} ${y5}`);
 
-            // Left dust flap (chamfered)
-            cuts.push(`M ${ox} ${y4} L ${ox - dust + dustR} ${y4}`);
-            cuts.push(`M ${ox - dust + dustR} ${y4} L ${ox - dust} ${y4 + dustR}`);
-            cuts.push(`M ${ox - dust} ${y4 + dustR} L ${ox - dust} ${y5 - dustR}`);
-            cuts.push(`M ${ox - dust} ${y5 - dustR} L ${ox - dust + dustR} ${y5}`);
-            cuts.push(`M ${ox - dust + dustR} ${y5} L ${ox} ${y5}`);
+            // Left dust flap (trapezoid with chamfered outer corners)
+            const leftDustOuterTop2 = y4 + dustOffset;
+            const leftDustOuterBottom2 = y5 - dustOffset;
+            // Top diagonal edge
+            cuts.push(`M ${ox} ${y4} L ${ox - dust + dustR} ${leftDustOuterTop2}`);
+            // Top-outer chamfer
+            cuts.push(`M ${ox - dust + dustR} ${leftDustOuterTop2} L ${ox - dust} ${leftDustOuterTop2 + dustR}`);
+            // Outer vertical edge
+            cuts.push(`M ${ox - dust} ${leftDustOuterTop2 + dustR} L ${ox - dust} ${leftDustOuterBottom2 - dustR}`);
+            // Bottom-outer chamfer
+            cuts.push(`M ${ox - dust} ${leftDustOuterBottom2 - dustR} L ${ox - dust + dustR} ${leftDustOuterBottom2}`);
+            // Bottom diagonal edge
+            cuts.push(`M ${ox - dust + dustR} ${leftDustOuterBottom2} L ${ox} ${y5}`);
 
-            // Right dust flap (chamfered)
-            cuts.push(`M ${ox + L} ${y4} L ${ox + L + dust - dustR} ${y4}`);
-            cuts.push(`M ${ox + L + dust - dustR} ${y4} L ${ox + L + dust} ${y4 + dustR}`);
-            cuts.push(`M ${ox + L + dust} ${y4 + dustR} L ${ox + L + dust} ${y5 - dustR}`);
-            cuts.push(`M ${ox + L + dust} ${y5 - dustR} L ${ox + L + dust - dustR} ${y5}`);
-            cuts.push(`M ${ox + L + dust - dustR} ${y5} L ${ox + L} ${y5}`);
+            // Right dust flap (trapezoid with chamfered outer corners)
+            const rightDustOuterTop2 = y4 + dustOffset;
+            const rightDustOuterBottom2 = y5 - dustOffset;
+            // Top diagonal edge
+            cuts.push(`M ${ox + L} ${y4} L ${ox + L + dust - dustR} ${rightDustOuterTop2}`);
+            // Top-outer chamfer
+            cuts.push(`M ${ox + L + dust - dustR} ${rightDustOuterTop2} L ${ox + L + dust} ${rightDustOuterTop2 + dustR}`);
+            // Outer vertical edge
+            cuts.push(`M ${ox + L + dust} ${rightDustOuterTop2 + dustR} L ${ox + L + dust} ${rightDustOuterBottom2 - dustR}`);
+            // Bottom-outer chamfer
+            cuts.push(`M ${ox + L + dust} ${rightDustOuterBottom2 - dustR} L ${ox + L + dust - dustR} ${rightDustOuterBottom2}`);
+            // Bottom diagonal edge
+            cuts.push(`M ${ox + L + dust - dustR} ${rightDustOuterBottom2} L ${ox + L} ${y5}`);
 
             // ==========================================
             // BUILD SVG
@@ -251,9 +294,9 @@ function shoeBoxDesigner() {
             // Labels
             if (this.display.showLabels) {
                 const labels = [
-                    { x: ox + L / 2, y: oy + H / 2, text: `${L}x${H}` },
-                    { x: ox - tuck / 2, y: oy + H / 2, text: 'tuck' },
-                    { x: ox + L + tuck / 2, y: oy + H / 2, text: 'tuck' },
+                    { x: ox + L / 2, y: oy + lidW / 2, text: `${L}x${Math.round(lidW)}` },
+                    { x: ox - tuck / 2, y: oy + lidW / 2, text: 'tuck' },
+                    { x: ox + L + tuck / 2, y: oy + lidW / 2, text: 'tuck' },
                     { x: ox + L / 2, y: y1 + W / 2, text: `${L}x${W}` },
                     { x: ox - tuck / 2, y: y1 + W / 2, text: 'tuck' },
                     { x: ox + L + tuck / 2, y: y1 + W / 2, text: 'tuck' },
@@ -309,11 +352,12 @@ function shoeBoxDesigner() {
             const dustPct = parseFloat(this.box.dustFlapPct);
             const dust = (dustPct / 100) * (W / 2);
             const tuck = parseFloat(this.box.tuckFlap);
+            const lidW = Math.min(parseFloat(this.box.lidFlapWidth), H);
 
             const padding = 60;
-            const sideWidth = Math.max(tuck, dust, 2 * H);
+            const sideWidth = Math.max(lidW, tuck, dust, 2 * H);
             const patternW = L + 2 * sideWidth;
-            const patternH = 3 * H + 2 * W;
+            const patternH = lidW + 2 * H + 2 * W;
             const totalW = patternW + padding * 2;
             const totalH = patternH + padding * 2;
 
@@ -358,11 +402,12 @@ function shoeBoxDesigner() {
             const dustPct = parseFloat(this.box.dustFlapPct);
             const dust = (dustPct / 100) * (W / 2);
             const tuck = parseFloat(this.box.tuckFlap);
+            const lidW = Math.min(parseFloat(this.box.lidFlapWidth), H);
 
             const padding = 60;
-            const sideWidth = Math.max(tuck, dust, 2 * H);
+            const sideWidth = Math.max(lidW, tuck, dust, 2 * H);
             const patternW = L + 2 * sideWidth;
-            const patternH = 3 * H + 2 * W;
+            const patternH = lidW + 2 * H + 2 * W;
             const totalW = patternW + padding * 2;
             const totalH = patternH + padding * 2;
 
