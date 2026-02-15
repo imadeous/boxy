@@ -52,7 +52,7 @@ function shoeBoxDesigner() {
             const lidR = Math.min(parseFloat(this.box.lidTuckRadius), lidW); // Lid tuck radius: max = lidW
 
             // Double wall lock system parameters
-            const lockEnabled = this.box.lockEnabled;
+            const lockEnabled = this.box.lockEnabled === true || this.box.lockEnabled === 'true';
             const lockCount = parseInt(this.box.lockCount);
             const lockLength = parseFloat(this.box.lockLength);
             const lockGap = parseFloat(this.box.lockGap);
@@ -193,8 +193,44 @@ function shoeBoxDesigner() {
             // ROW 4: BASE (LxW) with side walls
             // ==========================================
             // Fold lines from base to inner panels
-            folds.push(`M ${ox} ${y3} L ${ox} ${y4}`);
-            folds.push(`M ${ox + L} ${y3} L ${ox + L} ${y4}`);
+            // When lock system enabled, these fold lines are broken into segments around slots
+            if (lockEnabled) {
+                // Calculate slot positions (same as lock system below)
+                const totalLockHeight = (lockCount * lockLength) + ((lockCount - 1) * lockGap);
+                const lockStartY = y3 + (W - totalLockHeight) / 2;
+
+                // LEFT fold line (ox) - segments around slots
+                let lastY = y3;
+                for (let i = 0; i < lockCount; i++) {
+                    const slotY = lockStartY + i * (lockLength + lockGap);
+                    // Fold segment before this slot
+                    if (slotY > lastY) {
+                        folds.push(`M ${ox} ${lastY} L ${ox} ${slotY}`);
+                    }
+                    lastY = slotY + lockLength;
+                }
+                // Fold segment after last slot
+                if (lastY < y4) {
+                    folds.push(`M ${ox} ${lastY} L ${ox} ${y4}`);
+                }
+
+                // RIGHT fold line (ox + L) - segments around slots
+                lastY = y3;
+                for (let i = 0; i < lockCount; i++) {
+                    const slotY = lockStartY + i * (lockLength + lockGap);
+                    if (slotY > lastY) {
+                        folds.push(`M ${ox + L} ${lastY} L ${ox + L} ${slotY}`);
+                    }
+                    lastY = slotY + lockLength;
+                }
+                if (lastY < y4) {
+                    folds.push(`M ${ox + L} ${lastY} L ${ox + L} ${y4}`);
+                }
+            } else {
+                // No locks - continuous fold lines
+                folds.push(`M ${ox} ${y3} L ${ox} ${y4}`);
+                folds.push(`M ${ox + L} ${y3} L ${ox + L} ${y4}`);
+            }
 
             // LEFT INNER PANEL (WxH) - between base and left side wall
             folds.push(`M ${xL1} ${y3} L ${xL1} ${y4}`);
@@ -206,8 +242,24 @@ function shoeBoxDesigner() {
             // LEFT SIDE WALL (WxH) - square corners
             // Top edge
             cuts.push(`M ${xL1} ${y3} L ${xL2} ${y3}`);
-            // Left edge
-            cuts.push(`M ${xL2} ${y3} L ${xL2} ${y4}`);
+            // Left edge - segmented when locks enabled (lock tabs attach here)
+            if (lockEnabled) {
+                const totalLockHeight2 = (lockCount * lockLength) + ((lockCount - 1) * lockGap);
+                const lockStartY2 = y3 + (W - totalLockHeight2) / 2;
+                let lastY2 = y3;
+                for (let i = 0; i < lockCount; i++) {
+                    const lockY2 = lockStartY2 + i * (lockLength + lockGap);
+                    if (lockY2 > lastY2) {
+                        cuts.push(`M ${xL2} ${lastY2} L ${xL2} ${lockY2}`);
+                    }
+                    lastY2 = lockY2 + lockLength;
+                }
+                if (lastY2 < y4) {
+                    cuts.push(`M ${xL2} ${lastY2} L ${xL2} ${y4}`);
+                }
+            } else {
+                cuts.push(`M ${xL2} ${y3} L ${xL2} ${y4}`);
+            }
             // Bottom edge
             cuts.push(`M ${xL2} ${y4} L ${xL1} ${y4}`);
 
@@ -221,8 +273,24 @@ function shoeBoxDesigner() {
             // RIGHT SIDE WALL (WxH) - square corners
             // Top edge
             cuts.push(`M ${ox + L + H} ${y3} L ${xR2} ${y3}`);
-            // Right edge
-            cuts.push(`M ${xR2} ${y3} L ${xR2} ${y4}`);
+            // Right edge - segmented when locks enabled (lock tabs attach here)
+            if (lockEnabled) {
+                const totalLockHeight3 = (lockCount * lockLength) + ((lockCount - 1) * lockGap);
+                const lockStartY3 = y3 + (W - totalLockHeight3) / 2;
+                let lastY3 = y3;
+                for (let i = 0; i < lockCount; i++) {
+                    const lockY3 = lockStartY3 + i * (lockLength + lockGap);
+                    if (lockY3 > lastY3) {
+                        cuts.push(`M ${xR2} ${lastY3} L ${xR2} ${lockY3}`);
+                    }
+                    lastY3 = lockY3 + lockLength;
+                }
+                if (lastY3 < y4) {
+                    cuts.push(`M ${xR2} ${lastY3} L ${xR2} ${y4}`);
+                }
+            } else {
+                cuts.push(`M ${xR2} ${y3} L ${xR2} ${y4}`);
+            }
             // Bottom edge
             cuts.push(`M ${xR2} ${y4} L ${ox + L + H} ${y4}`);
 
@@ -232,7 +300,9 @@ function shoeBoxDesigner() {
             // ==========================================
             // DOUBLE WALL LOCK SYSTEM
             // Lock tabs protrude from outer side walls (xL2/xR2)
-            // Slots are at base-to-inner-panel fold lines (ox/ox+L)
+            // Slots straddle the base-to-inner-panel fold lines (ox/ox+L)
+            // Slot is a rectangular hole - all edges are cuts
+            // The fold line continues through the slot area as a fold
             // ==========================================
             if (lockEnabled) {
                 // Calculate total height needed for locks and gaps
@@ -248,14 +318,24 @@ function shoeBoxDesigner() {
                     // LEFT SIDE
                     // Lock tab: protrudes left from outer side wall edge (xL2)
                     cuts.push(`M ${xL2} ${lockY} L ${xL2 - slotWidth} ${lockY} L ${xL2 - slotWidth} ${lockYEnd} L ${xL2} ${lockYEnd}`);
-                    // Slot: at base fold line (ox), cuts through the fold
-                    cuts.push(`M ${ox - slotWidth} ${lockY} L ${ox + slotWidth} ${lockY} L ${ox + slotWidth} ${lockYEnd} L ${ox - slotWidth} ${lockYEnd}`);
+                    // Slot: rectangular hole straddling the fold line at ox
+                    cuts.push(`M ${ox - slotWidth} ${lockY} L ${ox + slotWidth} ${lockY}`);  // Top
+                    cuts.push(`M ${ox + slotWidth} ${lockY} L ${ox + slotWidth} ${lockYEnd}`); // Right
+                    cuts.push(`M ${ox + slotWidth} ${lockYEnd} L ${ox - slotWidth} ${lockYEnd}`); // Bottom
+                    cuts.push(`M ${ox - slotWidth} ${lockYEnd} L ${ox - slotWidth} ${lockY}`); // Left
+                    // Fold line continues through slot
+                    folds.push(`M ${ox} ${lockY} L ${ox} ${lockYEnd}`);
 
                     // RIGHT SIDE
                     // Lock tab: protrudes right from outer side wall edge (xR2)
                     cuts.push(`M ${xR2} ${lockY} L ${xR2 + slotWidth} ${lockY} L ${xR2 + slotWidth} ${lockYEnd} L ${xR2} ${lockYEnd}`);
-                    // Slot: at base fold line (ox + L), cuts through the fold
-                    cuts.push(`M ${ox + L - slotWidth} ${lockY} L ${ox + L + slotWidth} ${lockY} L ${ox + L + slotWidth} ${lockYEnd} L ${ox + L - slotWidth} ${lockYEnd}`);
+                    // Slot: rectangular hole straddling the fold line at ox+L
+                    cuts.push(`M ${ox + L - slotWidth} ${lockY} L ${ox + L + slotWidth} ${lockY}`);  // Top
+                    cuts.push(`M ${ox + L + slotWidth} ${lockY} L ${ox + L + slotWidth} ${lockYEnd}`); // Right
+                    cuts.push(`M ${ox + L + slotWidth} ${lockYEnd} L ${ox + L - slotWidth} ${lockYEnd}`); // Bottom
+                    cuts.push(`M ${ox + L - slotWidth} ${lockYEnd} L ${ox + L - slotWidth} ${lockY}`); // Left
+                    // Fold line continues through slot
+                    folds.push(`M ${ox + L} ${lockY} L ${ox + L} ${lockYEnd}`);
                 }
             }
 

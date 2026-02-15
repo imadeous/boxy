@@ -207,7 +207,7 @@
                                     <label class="text-sm text-gray-600">Number of Locks</label>
                                     <span class="text-sm font-medium text-indigo-600" x-text="box.lockCount"></span>
                                 </div>
-                                <input type="range" x-model="box.lockCount" min="1" max="3" step="1"
+                                <input type="range" x-model="box.lockCount" min="1" max="5" step="1"
                                     class="w-full param-slider">
                             </div>
                             <div>
@@ -216,16 +216,27 @@
                                     <span class="text-sm font-medium text-indigo-600"
                                         x-text="box.lockLength + ' mm'"></span>
                                 </div>
-                                <input type="range" x-model="box.lockLength" min="10" max="60"
+                                <input type="range" x-model="box.lockLength" min="10"
+                                    :max="Math.floor((0.8 * box.width - (box.lockCount - 1) * box.lockGap) / box.lockCount)"
                                     class="w-full param-slider">
                             </div>
-                            <div>
+                            <div x-show="box.lockCount > 1">
                                 <div class="flex justify-between mb-1">
                                     <label class="text-sm text-gray-600">Gap Between Locks</label>
                                     <span class="text-sm font-medium text-indigo-600"
                                         x-text="box.lockGap + ' mm'"></span>
                                 </div>
-                                <input type="range" x-model="box.lockGap" min="5" max="40" class="w-full param-slider">
+                                <input type="range" x-model="box.lockGap" min="5"
+                                    :max="Math.floor((0.8 * box.width - box.lockCount * box.lockLength) / (box.lockCount - 1))"
+                                    class="w-full param-slider">
+                            </div>
+                            <!-- Lock usage indicator -->
+                            <div class="text-xs text-gray-500 pt-2 border-t border-gray-200">
+                                <div class="flex justify-between">
+                                    <span>Total lock height:</span>
+                                    <span
+                                        x-text="(box.lockCount * box.lockLength + (box.lockCount - 1) * box.lockGap) + ' / ' + Math.floor(0.8 * box.width) + ' mm'"></span>
+                                </div>
                             </div>
                             <div>
                                 <div class="flex justify-between mb-1">
