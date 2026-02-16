@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Triangular Prism Box - Boxy</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        .param-slider {
+            -webkit-appearance: none;
+            appearance: none;
+            height: 6px;
+            background: #e5e7eb;
+            border-radius: 3px;
+            outline: none;
+        }
+
+        .param-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #4f46e5;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .cut-line {
+            stroke: #1f2937;
+            stroke-width: 1.5;
+            fill: none;
+        }
+
+        .fold-line {
+            stroke: #3b82f6;
+            stroke-width: 1;
+            stroke-dasharray: 8, 4;
+            fill: none;
+        }
+
+        .dimension-line {
+            stroke: #9ca3af;
+            stroke-width: 0.5;
+            fill: none;
+        }
+
+        .dimension-text {
+            font: 11px Arial;
+            fill: #6b7280;
+        }
+
+        .label-text {
+            font: 12px Arial;
+            fill: #9ca3af;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 min-h-screen">
+    <div x-data="triangularPrismDesigner()" x-init="init()" class="flex flex-col h-screen">
+        <!-- Header -->
+        <header class="bg-gradient-to-r from-amber-500 to-orange-500 text-white px-6 py-4 shadow-lg">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <a href="../index.html" class="flex items-center gap-3 hover:opacity-90 transition">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                        </svg>
+                        <h1 class="text-2xl font-bold">Boxy</h1>
+                    </a>
+                    <span class="text-amber-100 text-sm">/ Triangular Prism Box</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button @click="exportSVG()"
+                        class="px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded-md text-sm font-medium transition">SVG</button>
+                    <button @click="exportPNG()"
+                        class="px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded-md text-sm font-medium transition">PNG</button>
+                    <button @click="exportPDF()"
+                        class="px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded-md text-sm font-medium transition">PDF</button>
+                    <button @click="exportDXF()"
+                        class="px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded-md text-sm font-medium transition">DXF</button>
+                </div>
+            </div>
+        </header>
+
+        <div class="flex flex-1 overflow-hidden">
+            <!-- Sidebar -->
+            <aside class="w-80 bg-white shadow-xl overflow-y-auto p-5 space-y-6">
+                <!-- Box Dimensions -->
+                <div>
+                    <h2 class="text-lg font-semibold text-gray-800 mb-4">Prism Dimensions (mm)</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <label class="text-sm text-gray-600">Side Length (S)</label>
+                                <span class="text-sm font-medium text-amber-600" x-text="box.side + ' mm'"></span>
+                            </div>
+                            <input type="range" x-model="box.side" min="30" max="150" class="w-full param-slider">
+                            <p class="text-xs text-gray-400 mt-1">Equilateral triangle side</p>
+                        </div>
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <label class="text-sm text-gray-600">Depth (D)</label>
+                                <span class="text-sm font-medium text-amber-600" x-text="box.depth + ' mm'"></span>
+                            </div>
+                            <input type="range" x-model="box.depth" min="50" max="400" class="w-full param-slider">
+                            <p class="text-xs text-gray-400 mt-1">Length of the box</p>
+                        </div>
+                        <div class="pt-2 border-t border-gray-200">
+                            <div class="flex justify-between text-xs text-gray-500">
+                                <span>Triangle Height:</span>
+                                <span x-text="Math.round(box.side * Math.sqrt(3) / 2) + ' mm'"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tuck Flap Options -->
+                <div>
+                    <h2 class="text-lg font-semibold text-gray-800 mb-4">Tuck Tab</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <label class="text-sm text-gray-600">Tuck Width</label>
+                                <span class="text-sm font-medium text-amber-600" x-text="box.tuckWidth + ' mm'"></span>
+                            </div>
+                            <input type="range" x-model="box.tuckWidth" min="8" max="30" class="w-full param-slider">
+                        </div>
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <label class="text-sm text-gray-600">Tuck Roundness</label>
+                                <span class="text-sm font-medium text-amber-600" x-text="box.tuckRound + ' mm'"></span>
+                            </div>
+                            <input type="range" x-model="box.tuckRound" min="0" :max="box.tuckWidth / 2"
+                                class="w-full param-slider">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- End Flap Options -->
+                <div>
+                    <h2 class="text-lg font-semibold text-gray-800 mb-4">End Flaps</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <label class="text-sm text-gray-600">End Tuck Width</label>
+                                <span class="text-sm font-medium text-amber-600"
+                                    x-text="box.endTuckWidth + ' mm'"></span>
+                            </div>
+                            <input type="range" x-model="box.endTuckWidth" min="5" max="20" class="w-full param-slider">
+                            <p class="text-xs text-gray-400 mt-1">Small tuck on end flap 1</p>
+                        </div>
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <label class="text-sm text-gray-600">Lock Tab Width</label>
+                                <span class="text-sm font-medium text-amber-600"
+                                    x-text="box.lockTabWidth + ' mm'"></span>
+                            </div>
+                            <input type="range" x-model="box.lockTabWidth" min="8" max="30" class="w-full param-slider">
+                            <p class="text-xs text-gray-400 mt-1">Tab on end flap 3</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Side Lock Options -->
+                <div>
+                    <h2 class="text-lg font-semibold text-gray-800 mb-4">Side Locks</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <label class="text-sm text-gray-600">Lock Count</label>
+                                <span class="text-sm font-medium text-amber-600" x-text="box.sideLockCount"></span>
+                            </div>
+                            <input type="range" x-model="box.sideLockCount" min="1" max="3" class="w-full param-slider">
+                            <p class="text-xs text-gray-400 mt-1">Number of side locks</p>
+                        </div>
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <label class="text-sm text-gray-600">Lock Width</label>
+                                <span class="text-sm font-medium text-amber-600"
+                                    x-text="box.sideLockWidth + ' mm'"></span>
+                            </div>
+                            <input type="range" x-model="box.sideLockWidth" min="4" max="15"
+                                class="w-full param-slider">
+                            <p class="text-xs text-gray-400 mt-1">Max 75% of tuck width</p>
+                        </div>
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <label class="text-sm text-gray-600">Lock Height</label>
+                                <span class="text-sm font-medium text-amber-600"
+                                    x-text="box.sideLockHeight + ' mm'"></span>
+                            </div>
+                            <input type="range" x-model="box.sideLockHeight" min="8" max="25"
+                                class="w-full param-slider">
+                        </div>
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <label class="text-sm text-gray-600">Slit Width</label>
+                                <span class="text-sm font-medium text-amber-600"
+                                    x-text="box.sideLockSlitWidth + ' mm'"></span>
+                            </div>
+                            <input type="range" x-model="box.sideLockSlitWidth" min="4" max="15"
+                                class="w-full param-slider">
+                            <p class="text-xs text-gray-400 mt-1">Width of slit &amp; tab</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Display Options -->
+                <div>
+                    <h2 class="text-lg font-semibold text-gray-800 mb-4">Display</h2>
+                    <div class="space-y-3">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" x-model="display.showDimensions"
+                                class="w-4 h-4 text-amber-600 rounded">
+                            <span class="text-sm text-gray-700">Show Dimensions</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" x-model="display.showLabels" class="w-4 h-4 text-amber-600 rounded">
+                            <span class="text-sm text-gray-700">Show Labels</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" x-model="display.showGrid" class="w-4 h-4 text-amber-600 rounded">
+                            <span class="text-sm text-gray-700">Show Grid (10mm)</span>
+                        </label>
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <label class="text-sm text-gray-600">Zoom</label>
+                                <span class="text-sm font-medium text-amber-600"
+                                    x-text="Math.round(display.scale * 100) + '%'"></span>
+                            </div>
+                            <input type="range" x-model="display.scale" min="0.3" max="2" step="0.1"
+                                class="w-full param-slider">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Info Box -->
+                <div class="bg-amber-50 rounded-lg p-4 border border-amber-200">
+                    <h3 class="text-sm font-semibold text-amber-800 mb-2">About This Style</h3>
+                    <p class="text-xs text-amber-700">
+                        Toblerone-style box with 3 distinct end flaps: (1) triangle with diagonal side flap containing
+                        lock slot,
+                        (2) triangle with inner fold and lock tab at apex, (3) triangle with small tab at corner.
+                    </p>
+                </div>
+            </aside>
+
+            <!-- Main Canvas -->
+            <main class="flex-1 p-6 overflow-auto">
+                <div class="bg-white rounded-xl shadow-lg p-6 inline-block min-w-full">
+                    <div class="mb-4 pb-4 border-b flex justify-between items-center">
+                        <div>
+                            <h2 class="text-lg font-semibold text-gray-800">Triangular Prism Box</h2>
+                            <p class="text-sm text-gray-500"
+                                x-text="'Side: ' + box.side + 'mm  ×  Depth: ' + box.depth + 'mm'">
+                            </p>
+                        </div>
+                        <!-- Legend -->
+                        <div class="flex items-center gap-6">
+                            <div class="flex items-center gap-2">
+                                <svg width="30" height="10">
+                                    <line x1="0" y1="5" x2="30" y2="5" class="cut-line" />
+                                </svg>
+                                <span class="text-sm text-gray-600">Cut line</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <svg width="30" height="10">
+                                    <line x1="0" y1="5" x2="30" y2="5" class="fold-line" />
+                                </svg>
+                                <span class="text-sm text-gray-600">Fold line</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="svg-container" class="flex justify-center" x-html="generateSVG()"></div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="../js/export.js"></script>
+    <script src="../js/triangular-prism.js"></script>
+</body>
+
+</html>

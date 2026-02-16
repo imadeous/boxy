@@ -16,16 +16,19 @@ Interactive web app for designing custom packaging templates with cutting and fo
 boxy/
 ├── index.html                          # Home page with style selection
 ├── styles/
-│   └── single-piece-folding-lid.html   # Style-specific designer page
+│   ├── single-piece-folding-lid.html   # Shoe box style
+│   └── triangular-prism.html           # Toblerone-style box
 ├── js/
 │   ├── export.js                       # Universal export module
-│   └── single-piece-folding-lid.js     # Style-specific logic
+│   ├── single-piece-folding-lid.js     # Shoe box logic
+│   └── triangular-prism.js             # Triangular prism logic
 └── README.md
 ```
 
 ## Available Styles
 
 - **Single Piece Folding Lid** - Classic shoe box design with integrated lid and double-wall construction
+- **Triangular Prism Box** - Toblerone-style box with interlocking end flaps, no glue required
 
 ### Coming Soon
 - Tuck End Box

@@ -10,13 +10,16 @@
         .style-card {
             transition: all 0.3s ease;
         }
+
         .style-card:hover {
             transform: translateY(-4px);
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
         }
+
         .style-card:hover .card-icon {
             transform: scale(1.1);
         }
+
         .card-icon {
             transition: transform 0.3s ease;
         }
@@ -38,7 +41,8 @@
                 </div>
             </div>
             <p class="text-indigo-100 mt-4 max-w-2xl">
-                Design custom packaging templates with precise dimensions. Export to SVG, PNG, PDF, or DXF for cutting machines.
+                Design custom packaging templates with precise dimensions. Export to SVG, PNG, PDF, or DXF for cutting
+                machines.
             </p>
         </div>
     </header>
@@ -51,9 +55,11 @@
         <!-- Style Cards Grid -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <!-- Single Piece Folding Lid -->
-            <a href="styles/single-piece-folding-lid.html" class="style-card bg-white rounded-xl shadow-md overflow-hidden block">
+            <a href="styles/single-piece-folding-lid.html"
+                class="style-card bg-white rounded-xl shadow-md overflow-hidden block">
                 <div class="bg-gradient-to-br from-indigo-50 to-purple-50 p-8 flex items-center justify-center">
-                    <svg class="card-icon w-32 h-32 text-indigo-500" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <svg class="card-icon w-32 h-32 text-indigo-500" viewBox="0 0 100 100" fill="none"
+                        stroke="currentColor" stroke-width="1.5">
                         <!-- Simplified box pattern preview -->
                         <rect x="25" y="5" width="50" height="15" stroke-dasharray="3,2" />
                         <rect x="25" y="20" width="50" height="25" />
@@ -71,7 +77,8 @@
                 <div class="p-5">
                     <h3 class="text-lg font-semibold text-gray-800 mb-2">Single Piece Folding Lid</h3>
                     <p class="text-gray-600 text-sm mb-3">
-                        Classic shoe box design with integrated lid. Features double-wall construction with interlocking tabs for durability.
+                        Classic shoe box design with integrated lid. Features double-wall construction with interlocking
+                        tabs for durability.
                     </p>
                     <div class="flex flex-wrap gap-2">
                         <span class="px-2 py-1 bg-indigo-100 text-indigo-700 text-xs rounded-full">Double Wall</span>
@@ -81,10 +88,48 @@
                 </div>
             </a>
 
+            <!-- Triangular Prism Box -->
+            <a href="styles/triangular-prism.html"
+                class="style-card bg-white rounded-xl shadow-md overflow-hidden block">
+                <div class="bg-gradient-to-br from-amber-50 to-orange-50 p-8 flex items-center justify-center">
+                    <svg class="card-icon w-32 h-32 text-amber-500" viewBox="0 0 100 100" fill="none"
+                        stroke="currentColor" stroke-width="1.5">
+                        <!-- Triangular prism pattern preview -->
+                        <rect x="10" y="30" width="25" height="40" />
+                        <rect x="35" y="30" width="25" height="40" />
+                        <rect x="60" y="30" width="25" height="40" />
+                        <!-- Top triangular flaps -->
+                        <polygon points="10,30 22,15 35,30" stroke-dasharray="2,1" />
+                        <polygon points="35,30 47,15 60,30" stroke-dasharray="2,1" />
+                        <polygon points="60,30 72,15 85,30" stroke-dasharray="2,1" />
+                        <!-- Bottom triangular flaps -->
+                        <polygon points="10,70 22,85 35,70" stroke-dasharray="2,1" />
+                        <polygon points="35,70 47,85 60,70" stroke-dasharray="2,1" />
+                        <polygon points="60,70 72,85 85,70" stroke-dasharray="2,1" />
+                        <!-- Lock tabs -->
+                        <rect x="68" y="10" width="8" height="5" />
+                        <rect x="68" y="85" width="8" height="5" />
+                    </svg>
+                </div>
+                <div class="p-5">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-2">Triangular Prism Box</h3>
+                    <p class="text-gray-600 text-sm mb-3">
+                        Toblerone-style triangular box with interlocking end flaps. No glue required - folds and locks
+                        securely.
+                    </p>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="px-2 py-1 bg-amber-100 text-amber-700 text-xs rounded-full">No Glue</span>
+                        <span class="px-2 py-1 bg-orange-100 text-orange-700 text-xs rounded-full">Lock Tabs</span>
+                        <span class="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs rounded-full">Triangular</span>
+                    </div>
+                </div>
+            </a>
+
             <!-- Coming Soon Card 1 -->
             <div class="style-card bg-white rounded-xl shadow-md overflow-hidden opacity-60 cursor-not-allowed">
                 <div class="bg-gradient-to-br from-gray-50 to-gray-100 p-8 flex items-center justify-center">
-                    <svg class="card-icon w-32 h-32 text-gray-400" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <svg class="card-icon w-32 h-32 text-gray-400" viewBox="0 0 100 100" fill="none"
+                        stroke="currentColor" stroke-width="1.5">
                         <!-- Tuck end box preview -->
                         <rect x="25" y="20" width="50" height="60" />
                         <path d="M25 20 L25 10 L75 10 L75 20" />
@@ -111,7 +156,8 @@
             <!-- Coming Soon Card 2 -->
             <div class="style-card bg-white rounded-xl shadow-md overflow-hidden opacity-60 cursor-not-allowed">
                 <div class="bg-gradient-to-br from-gray-50 to-gray-100 p-8 flex items-center justify-center">
-                    <svg class="card-icon w-32 h-32 text-gray-400" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <svg class="card-icon w-32 h-32 text-gray-400" viewBox="0 0 100 100" fill="none"
+                        stroke="currentColor" stroke-width="1.5">
                         <!-- Mailer box preview -->
                         <rect x="20" y="25" width="60" height="50" />
                         <path d="M20 25 L50 5 L80 25" stroke-dasharray="3,2" />
@@ -138,7 +184,8 @@
             <!-- Coming Soon Card 3 -->
             <div class="style-card bg-white rounded-xl shadow-md overflow-hidden opacity-60 cursor-not-allowed">
                 <div class="bg-gradient-to-br from-gray-50 to-gray-100 p-8 flex items-center justify-center">
-                    <svg class="card-icon w-32 h-32 text-gray-400" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <svg class="card-icon w-32 h-32 text-gray-400" viewBox="0 0 100 100" fill="none"
+                        stroke="currentColor" stroke-width="1.5">
                         <!-- Pillow box preview -->
                         <ellipse cx="50" cy="15" rx="35" ry="10" />
                         <ellipse cx="50" cy="85" rx="35" ry="10" />
@@ -164,7 +211,8 @@
             <!-- Coming Soon Card 4 -->
             <div class="style-card bg-white rounded-xl shadow-md overflow-hidden opacity-60 cursor-not-allowed">
                 <div class="bg-gradient-to-br from-gray-50 to-gray-100 p-8 flex items-center justify-center">
-                    <svg class="card-icon w-32 h-32 text-gray-400" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <svg class="card-icon w-32 h-32 text-gray-400" viewBox="0 0 100 100" fill="none"
+                        stroke="currentColor" stroke-width="1.5">
                         <!-- Sleeve box preview -->
                         <rect x="15" y="30" width="70" height="40" />
                         <rect x="25" y="35" width="50" height="30" stroke-dasharray="3,2" />
@@ -189,7 +237,8 @@
             <!-- Coming Soon Card 5 -->
             <div class="style-card bg-white rounded-xl shadow-md overflow-hidden opacity-60 cursor-not-allowed">
                 <div class="bg-gradient-to-br from-gray-50 to-gray-100 p-8 flex items-center justify-center">
-                    <svg class="card-icon w-32 h-32 text-gray-400" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <svg class="card-icon w-32 h-32 text-gray-400" viewBox="0 0 100 100" fill="none"
+                        stroke="currentColor" stroke-width="1.5">
                         <!-- Hexagon box preview -->
                         <polygon points="50,10 85,30 85,70 50,90 15,70 15,30" />
                         <polygon points="50,25 70,35 70,65 50,75 30,65 30,35" stroke-dasharray="3,2" />
