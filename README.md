@@ -1,13 +1,38 @@
-# Boxy - Shoe Box Designer
+# Boxy - Packaging Template Designer
 
-Interactive web app for designing single-piece folding lid shoe box packaging with cutting and folding patterns.
+Interactive web app for designing custom packaging templates with cutting and folding patterns.
 
 ## Features
 
+- **Multiple Box Styles**: Choose from various packaging designs (with more coming soon)
 - **Parametric Design**: Adjust box dimensions, tuck flaps, and dust flaps in real-time
 - **Live Preview**: See the pattern update instantly as you modify parameters
 - **Display Options**: Toggle dimensions, labels, and 10mm grid overlay with adjustable zoom
-- **Export Formats**: SVG, PNG, PDF (with 1:1 mm scale for production)
+- **Export Formats**: SVG, PNG, PDF, DXF (with 1:1 mm scale for production)
+
+## Project Structure
+
+```
+boxy/
+├── index.html                          # Home page with style selection
+├── styles/
+│   └── single-piece-folding-lid.html   # Style-specific designer page
+├── js/
+│   ├── export.js                       # Universal export module
+│   └── single-piece-folding-lid.js     # Style-specific logic
+└── README.md
+```
+
+## Available Styles
+
+- **Single Piece Folding Lid** - Classic shoe box design with integrated lid and double-wall construction
+
+### Coming Soon
+- Tuck End Box
+- Mailer Box
+- Pillow Box
+- Sleeve & Tray
+- Hexagon Box
 
 ## Pattern Structure
 

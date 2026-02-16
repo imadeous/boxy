@@ -4,315 +4,220 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Boxy - Shoe Box Designer</title>
+    <title>Boxy - Packaging Designer</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
-        .param-slider {
-            -webkit-appearance: none;
-            appearance: none;
-            height: 6px;
-            background: #e5e7eb;
-            border-radius: 3px;
-            outline: none;
+        .style-card {
+            transition: all 0.3s ease;
         }
-
-        .param-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 16px;
-            height: 16px;
-            background: #4f46e5;
-            border-radius: 50%;
-            cursor: pointer;
+        .style-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
         }
-
-        .cut-line {
-            stroke: #1f2937;
-            stroke-width: 1.5;
-            fill: none;
+        .style-card:hover .card-icon {
+            transform: scale(1.1);
         }
-
-        .fold-line {
-            stroke: #3b82f6;
-            stroke-width: 1;
-            stroke-dasharray: 8, 4;
-            fill: none;
-        }
-
-        .dimension-line {
-            stroke: #9ca3af;
-            stroke-width: 0.5;
-            fill: none;
-        }
-
-        .dimension-text {
-            font: 11px Arial;
-            fill: #6b7280;
-        }
-
-        .label-text {
-            font: 12px Arial;
-            fill: #9ca3af;
+        .card-icon {
+            transition: transform 0.3s ease;
         }
     </style>
 </head>
 
 <body class="bg-gray-100 min-h-screen">
-    <div x-data="shoeBoxDesigner()" x-init="init()" class="flex flex-col h-screen">
-        <!-- Header -->
-        <header class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-4 shadow-lg">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                    </svg>
-                    <h1 class="text-2xl font-bold">Boxy</h1>
-                    <span class="text-indigo-200 text-sm">Packaging Designer</span>
-                </div>
-                <div class="flex items-center gap-2">
-                    <button @click="exportSVG()"
-                        class="px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded-md text-sm font-medium transition">SVG</button>
-                    <button @click="exportPNG()"
-                        class="px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded-md text-sm font-medium transition">PNG</button>
-                    <button @click="exportPDF()"
-                        class="px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded-md text-sm font-medium transition">PDF</button>
-                    <button @click="exportDXF()"
-                        class="px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded-md text-sm font-medium transition">DXF</button>
+    <!-- Header -->
+    <header class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-6 shadow-lg">
+        <div class="max-w-6xl mx-auto">
+            <div class="flex items-center gap-3 mb-2">
+                <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                </svg>
+                <div>
+                    <h1 class="text-3xl font-bold">Boxy</h1>
+                    <p class="text-indigo-200 text-sm">Packaging Template Designer</p>
                 </div>
             </div>
-        </header>
-
-        <div class="flex flex-1 overflow-hidden">
-            <!-- Sidebar -->
-            <aside class="w-80 bg-white shadow-xl overflow-y-auto p-5 space-y-6">
-                <!-- Box Dimensions -->
-                <div>
-                    <h2 class="text-lg font-semibold text-gray-800 mb-4">Box Dimensions (mm)</h2>
-                    <div class="space-y-4">
-                        <div>
-                            <div class="flex justify-between mb-1">
-                                <label class="text-sm text-gray-600">Length (L)</label>
-                                <span class="text-sm font-medium text-indigo-600" x-text="box.length + ' mm'"></span>
-                            </div>
-                            <input type="range" x-model="box.length" min="50" max="400" class="w-full param-slider">
-                        </div>
-                        <div>
-                            <div class="flex justify-between mb-1">
-                                <label class="text-sm text-gray-600">Width (W)</label>
-                                <span class="text-sm font-medium text-indigo-600" x-text="box.width + ' mm'"></span>
-                            </div>
-                            <input type="range" x-model="box.width" min="50" max="400" class="w-full param-slider">
-                        </div>
-                        <div>
-                            <div class="flex justify-between mb-1">
-                                <label class="text-sm text-gray-600">Height (H)</label>
-                                <span class="text-sm font-medium text-indigo-600" x-text="box.height + ' mm'"></span>
-                            </div>
-                            <input type="range" x-model="box.height" min="50" max="400" class="w-full param-slider">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Tuck Flap Options (cyan area in diagram) -->
-                <div>
-                    <h2 class="text-lg font-semibold text-gray-800 mb-4">Tuck Flaps</h2>
-                    <div class="space-y-4">
-                        <div>
-                            <div class="flex justify-between mb-1">
-                                <label class="text-sm text-gray-600">Tuck Width</label>
-                                <span class="text-sm font-medium text-indigo-600" x-text="box.tuckFlap + ' mm'"></span>
-                            </div>
-                            <input type="range" x-model="box.tuckFlap" min="10" max="50" class="w-full param-slider">
-                            <p class="text-xs text-gray-400 mt-1">Also sets lid tuck width</p>
-                        </div>
-                        <div>
-                            <div class="flex justify-between mb-1">
-                                <label class="text-sm text-gray-600">Tuck Roundness</label>
-                                <span class="text-sm font-medium text-indigo-600" x-text="box.tuckRound + ' mm'"></span>
-                            </div>
-                            <input type="range" x-model="box.tuckRound" min="0" :max="box.tuckFlap"
-                                class="w-full param-slider">
-                            <p class="text-xs text-gray-400 mt-1">Max = Tuck Width</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Lid Flap Options -->
-                <div>
-                    <h2 class="text-lg font-semibold text-gray-800 mb-4">Lid Flap</h2>
-                    <div class="space-y-4">
-                        <div>
-                            <div class="flex justify-between mb-1">
-                                <label class="text-sm text-gray-600">Lid Flap Width</label>
-                                <span class="text-sm font-medium text-indigo-600"
-                                    x-text="Math.max(50, Math.min(box.lidFlapWidth, box.height)) + ' mm'"></span>
-                            </div>
-                            <input type="range" x-model="box.lidFlapWidth" min="50" :max="box.height"
-                                class="w-full param-slider">
-                            <p class="text-xs text-gray-400 mt-1">Min = 50mm, Max = H</p>
-                        </div>
-                        <div>
-                            <div class="flex justify-between mb-1">
-                                <label class="text-sm text-gray-600">Lid Tuck Radius</label>
-                                <span class="text-sm font-medium text-indigo-600"
-                                    x-text="Math.min(box.lidTuckRadius, box.lidFlapWidth) + ' mm'"></span>
-                            </div>
-                            <input type="range" x-model="box.lidTuckRadius" min="0" :max="box.lidFlapWidth"
-                                class="w-full param-slider">
-                            <p class="text-xs text-gray-400 mt-1">Max = Lid Flap Width</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Dust Flap Options -->
-                <div>
-                    <h2 class="text-lg font-semibold text-gray-800 mb-4">Dust Flaps</h2>
-                    <div class="space-y-4">
-                        <div>
-                            <div class="flex justify-between mb-1">
-                                <label class="text-sm text-gray-600">Flap Length (h)</label>
-                                <span class="text-sm font-medium text-indigo-600"
-                                    x-text="box.dustFlapPct + '% (' + Math.round((box.dustFlapPct / 100) * (box.width / 2)) + ' mm)'"></span>
-                            </div>
-                            <input type="range" x-model="box.dustFlapPct" min="0" max="100" class="w-full param-slider">
-                        </div>
-                        <div>
-                            <div class="flex justify-between mb-1">
-                                <label class="text-sm text-gray-600">Outer Width (a)</label>
-                                <span class="text-sm font-medium text-indigo-600"
-                                    x-text="box.dustOuterWidthPct + '% (' + Math.round((box.dustOuterWidthPct / 100) * box.height) + ' mm)'"></span>
-                            </div>
-                            <input type="range" x-model="box.dustOuterWidthPct" min="10" max="100"
-                                class="w-full param-slider">
-                            <p class="text-xs text-gray-400 mt-1"
-                                x-text="'Inner width (b) = H (' + box.height + ' mm)'"></p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Double Wall Lock System -->
-                <div>
-                    <h2 class="text-lg font-semibold text-gray-800 mb-4">Double Wall Locks</h2>
-                    <div class="space-y-4">
-                        <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" x-model="box.lockEnabled" class="w-4 h-4 text-indigo-600 rounded">
-                            <span class="text-sm text-gray-700">Enable Lock System</span>
-                        </label>
-                        <div x-show="box.lockEnabled" class="space-y-4">
-                            <div>
-                                <div class="flex justify-between mb-1">
-                                    <label class="text-sm text-gray-600">Number of Locks</label>
-                                    <span class="text-sm font-medium text-indigo-600" x-text="box.lockCount"></span>
-                                </div>
-                                <input type="range" x-model="box.lockCount" min="1" max="5" step="1"
-                                    class="w-full param-slider">
-                            </div>
-                            <div>
-                                <div class="flex justify-between mb-1">
-                                    <label class="text-sm text-gray-600">Lock Length</label>
-                                    <span class="text-sm font-medium text-indigo-600"
-                                        x-text="box.lockLength + ' mm'"></span>
-                                </div>
-                                <input type="range" x-model="box.lockLength" min="10"
-                                    :max="Math.floor((0.8 * box.width - (box.lockCount - 1) * box.lockGap) / box.lockCount)"
-                                    class="w-full param-slider">
-                            </div>
-                            <div x-show="box.lockCount > 1">
-                                <div class="flex justify-between mb-1">
-                                    <label class="text-sm text-gray-600">Gap Between Locks</label>
-                                    <span class="text-sm font-medium text-indigo-600"
-                                        x-text="box.lockGap + ' mm'"></span>
-                                </div>
-                                <input type="range" x-model="box.lockGap" min="5"
-                                    :max="Math.floor((0.8 * box.width - box.lockCount * box.lockLength) / (box.lockCount - 1))"
-                                    class="w-full param-slider">
-                            </div>
-                            <!-- Lock usage indicator -->
-                            <div class="text-xs text-gray-500 pt-2 border-t border-gray-200">
-                                <div class="flex justify-between">
-                                    <span>Total lock height:</span>
-                                    <span
-                                        x-text="(box.lockCount * box.lockLength + (box.lockCount - 1) * box.lockGap) + ' / ' + Math.floor(0.8 * box.width) + ' mm'"></span>
-                                </div>
-                            </div>
-                            <div>
-                                <div class="flex justify-between mb-1">
-                                    <label class="text-sm text-gray-600">Slot Width</label>
-                                    <span class="text-sm font-medium text-indigo-600"
-                                        x-text="box.slotWidth + ' mm'"></span>
-                                </div>
-                                <input type="range" x-model="box.slotWidth" min="2" max="8" class="w-full param-slider">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Display Options -->
-                <div>
-                    <h2 class="text-lg font-semibold text-gray-800 mb-4">Display</h2>
-                    <div class="space-y-3">
-                        <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" x-model="display.showDimensions"
-                                class="w-4 h-4 text-indigo-600 rounded">
-                            <span class="text-sm text-gray-700">Show Dimensions</span>
-                        </label>
-                        <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" x-model="display.showLabels" class="w-4 h-4 text-indigo-600 rounded">
-                            <span class="text-sm text-gray-700">Show Labels</span>
-                        </label>
-                        <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" x-model="display.showGrid" class="w-4 h-4 text-indigo-600 rounded">
-                            <span class="text-sm text-gray-700">Show Grid (10mm)</span>
-                        </label>
-                        <div>
-                            <div class="flex justify-between mb-1">
-                                <label class="text-sm text-gray-600">Zoom</label>
-                                <span class="text-sm font-medium text-indigo-600"
-                                    x-text="Math.round(display.scale * 100) + '%'"></span>
-                            </div>
-                            <input type="range" x-model="display.scale" min="0.3" max="2" step="0.1"
-                                class="w-full param-slider">
-                        </div>
-                    </div>
-                </div>
-            </aside>
-
-            <!-- Main Canvas -->
-            <main class="flex-1 p-6 overflow-auto">
-                <div class="bg-white rounded-xl shadow-lg p-6 inline-block min-w-full">
-                    <div class="mb-4 pb-4 border-b flex justify-between items-center">
-                        <div>
-                            <h2 class="text-lg font-semibold text-gray-800">Single Piece Folding Lid</h2>
-                            <p class="text-sm text-gray-500"
-                                x-text="'L: ' + box.length + 'mm  ×  W: ' + box.width + 'mm  ×  H: ' + box.height + 'mm'">
-                            </p>
-                        </div>
-                        <!-- Legend -->
-                        <div class="flex items-center gap-6">
-                            <div class="flex items-center gap-2">
-                                <svg width="30" height="10">
-                                    <line x1="0" y1="5" x2="30" y2="5" class="cut-line" />
-                                </svg>
-                                <span class="text-sm text-gray-600">Cut line</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <svg width="30" height="10">
-                                    <line x1="0" y1="5" x2="30" y2="5" class="fold-line" />
-                                </svg>
-                                <span class="text-sm text-gray-600">Fold line</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div id="svg-container" class="flex justify-center" x-html="generateSVG()"></div>
-                </div>
-            </main>
+            <p class="text-indigo-100 mt-4 max-w-2xl">
+                Design custom packaging templates with precise dimensions. Export to SVG, PNG, PDF, or DXF for cutting machines.
+            </p>
         </div>
-    </div>
+    </header>
 
-    <script src="app.js"></script>
+    <!-- Main Content -->
+    <main class="max-w-6xl mx-auto px-6 py-10">
+        <h2 class="text-2xl font-bold text-gray-800 mb-2">Box Styles</h2>
+        <p class="text-gray-600 mb-8">Select a packaging style to start designing</p>
+
+        <!-- Style Cards Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Single Piece Folding Lid -->
+            <a href="styles/single-piece-folding-lid.html" class="style-card bg-white rounded-xl shadow-md overflow-hidden block">
+                <div class="bg-gradient-to-br from-indigo-50 to-purple-50 p-8 flex items-center justify-center">
+                    <svg class="card-icon w-32 h-32 text-indigo-500" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <!-- Simplified box pattern preview -->
+                        <rect x="25" y="5" width="50" height="15" stroke-dasharray="3,2" />
+                        <rect x="25" y="20" width="50" height="25" />
+                        <rect x="25" y="45" width="50" height="15" />
+                        <rect x="25" y="60" width="50" height="25" />
+                        <rect x="25" y="85" width="50" height="10" />
+                        <!-- Side flaps -->
+                        <rect x="10" y="60" width="15" height="25" />
+                        <rect x="75" y="60" width="15" height="25" />
+                        <!-- Dust flaps -->
+                        <path d="M25 45 L15 50 L15 55 L25 60" stroke-dasharray="2,1" />
+                        <path d="M75 45 L85 50 L85 55 L75 60" stroke-dasharray="2,1" />
+                    </svg>
+                </div>
+                <div class="p-5">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-2">Single Piece Folding Lid</h3>
+                    <p class="text-gray-600 text-sm mb-3">
+                        Classic shoe box design with integrated lid. Features double-wall construction with interlocking tabs for durability.
+                    </p>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="px-2 py-1 bg-indigo-100 text-indigo-700 text-xs rounded-full">Double Wall</span>
+                        <span class="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full">Lock Tabs</span>
+                        <span class="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">Dust Flaps</span>
+                    </div>
+                </div>
+            </a>
+
+            <!-- Coming Soon Card 1 -->
+            <div class="style-card bg-white rounded-xl shadow-md overflow-hidden opacity-60 cursor-not-allowed">
+                <div class="bg-gradient-to-br from-gray-50 to-gray-100 p-8 flex items-center justify-center">
+                    <svg class="card-icon w-32 h-32 text-gray-400" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <!-- Tuck end box preview -->
+                        <rect x="25" y="20" width="50" height="60" />
+                        <path d="M25 20 L25 10 L75 10 L75 20" />
+                        <path d="M25 80 L25 90 L75 90 L75 80" />
+                        <rect x="10" y="35" width="15" height="30" stroke-dasharray="2,1" />
+                        <rect x="75" y="35" width="15" height="30" stroke-dasharray="2,1" />
+                    </svg>
+                </div>
+                <div class="p-5">
+                    <div class="flex items-center gap-2 mb-2">
+                        <h3 class="text-lg font-semibold text-gray-500">Tuck End Box</h3>
+                        <span class="px-2 py-0.5 bg-gray-200 text-gray-600 text-xs rounded-full">Coming Soon</span>
+                    </div>
+                    <p class="text-gray-500 text-sm mb-3">
+                        Simple tuck-end closure box ideal for retail packaging and product displays.
+                    </p>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="px-2 py-1 bg-gray-100 text-gray-500 text-xs rounded-full">Tuck Closure</span>
+                        <span class="px-2 py-1 bg-gray-100 text-gray-500 text-xs rounded-full">Single Wall</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Coming Soon Card 2 -->
+            <div class="style-card bg-white rounded-xl shadow-md overflow-hidden opacity-60 cursor-not-allowed">
+                <div class="bg-gradient-to-br from-gray-50 to-gray-100 p-8 flex items-center justify-center">
+                    <svg class="card-icon w-32 h-32 text-gray-400" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <!-- Mailer box preview -->
+                        <rect x="20" y="25" width="60" height="50" />
+                        <path d="M20 25 L50 5 L80 25" stroke-dasharray="3,2" />
+                        <rect x="30" y="75" width="40" height="15" stroke-dasharray="2,1" />
+                        <path d="M20 75 L20 85 L30 90" stroke-dasharray="2,1" />
+                        <path d="M80 75 L80 85 L70 90" stroke-dasharray="2,1" />
+                    </svg>
+                </div>
+                <div class="p-5">
+                    <div class="flex items-center gap-2 mb-2">
+                        <h3 class="text-lg font-semibold text-gray-500">Mailer Box</h3>
+                        <span class="px-2 py-0.5 bg-gray-200 text-gray-600 text-xs rounded-full">Coming Soon</span>
+                    </div>
+                    <p class="text-gray-500 text-sm mb-3">
+                        E-commerce friendly design with roll-over lid and secure closure tabs.
+                    </p>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="px-2 py-1 bg-gray-100 text-gray-500 text-xs rounded-full">Roll Lid</span>
+                        <span class="px-2 py-1 bg-gray-100 text-gray-500 text-xs rounded-full">Self-Lock</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Coming Soon Card 3 -->
+            <div class="style-card bg-white rounded-xl shadow-md overflow-hidden opacity-60 cursor-not-allowed">
+                <div class="bg-gradient-to-br from-gray-50 to-gray-100 p-8 flex items-center justify-center">
+                    <svg class="card-icon w-32 h-32 text-gray-400" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <!-- Pillow box preview -->
+                        <ellipse cx="50" cy="15" rx="35" ry="10" />
+                        <ellipse cx="50" cy="85" rx="35" ry="10" />
+                        <path d="M15 15 Q10 50 15 85" />
+                        <path d="M85 15 Q90 50 85 85" />
+                    </svg>
+                </div>
+                <div class="p-5">
+                    <div class="flex items-center gap-2 mb-2">
+                        <h3 class="text-lg font-semibold text-gray-500">Pillow Box</h3>
+                        <span class="px-2 py-0.5 bg-gray-200 text-gray-600 text-xs rounded-full">Coming Soon</span>
+                    </div>
+                    <p class="text-gray-500 text-sm mb-3">
+                        Elegant curved design perfect for gifts, jewelry, and small items.
+                    </p>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="px-2 py-1 bg-gray-100 text-gray-500 text-xs rounded-full">Curved Ends</span>
+                        <span class="px-2 py-1 bg-gray-100 text-gray-500 text-xs rounded-full">Gift Ready</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Coming Soon Card 4 -->
+            <div class="style-card bg-white rounded-xl shadow-md overflow-hidden opacity-60 cursor-not-allowed">
+                <div class="bg-gradient-to-br from-gray-50 to-gray-100 p-8 flex items-center justify-center">
+                    <svg class="card-icon w-32 h-32 text-gray-400" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <!-- Sleeve box preview -->
+                        <rect x="15" y="30" width="70" height="40" />
+                        <rect x="25" y="35" width="50" height="30" stroke-dasharray="3,2" />
+                        <path d="M85 30 L95 35 L95 65 L85 70" />
+                    </svg>
+                </div>
+                <div class="p-5">
+                    <div class="flex items-center gap-2 mb-2">
+                        <h3 class="text-lg font-semibold text-gray-500">Sleeve & Tray</h3>
+                        <span class="px-2 py-0.5 bg-gray-200 text-gray-600 text-xs rounded-full">Coming Soon</span>
+                    </div>
+                    <p class="text-gray-500 text-sm mb-3">
+                        Two-piece design with sliding sleeve. Premium feel for high-end products.
+                    </p>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="px-2 py-1 bg-gray-100 text-gray-500 text-xs rounded-full">Two Piece</span>
+                        <span class="px-2 py-1 bg-gray-100 text-gray-500 text-xs rounded-full">Premium</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Coming Soon Card 5 -->
+            <div class="style-card bg-white rounded-xl shadow-md overflow-hidden opacity-60 cursor-not-allowed">
+                <div class="bg-gradient-to-br from-gray-50 to-gray-100 p-8 flex items-center justify-center">
+                    <svg class="card-icon w-32 h-32 text-gray-400" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <!-- Hexagon box preview -->
+                        <polygon points="50,10 85,30 85,70 50,90 15,70 15,30" />
+                        <polygon points="50,25 70,35 70,65 50,75 30,65 30,35" stroke-dasharray="3,2" />
+                    </svg>
+                </div>
+                <div class="p-5">
+                    <div class="flex items-center gap-2 mb-2">
+                        <h3 class="text-lg font-semibold text-gray-500">Hexagon Box</h3>
+                        <span class="px-2 py-0.5 bg-gray-200 text-gray-600 text-xs rounded-full">Coming Soon</span>
+                    </div>
+                    <p class="text-gray-500 text-sm mb-3">
+                        Eye-catching hexagonal shape ideal for cosmetics and specialty items.
+                    </p>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="px-2 py-1 bg-gray-100 text-gray-500 text-xs rounded-full">Hexagonal</span>
+                        <span class="px-2 py-1 bg-gray-100 text-gray-500 text-xs rounded-full">Specialty</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 mt-12 py-6">
+        <div class="max-w-6xl mx-auto px-6 text-center text-gray-500 text-sm">
+            <p>Boxy - Open Source Packaging Template Designer</p>
+        </div>
+    </footer>
 </body>
 
 </html>

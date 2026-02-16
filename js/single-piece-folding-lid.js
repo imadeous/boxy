@@ -1,10 +1,13 @@
 /**
- * Boxy - Shoe Box Designer
- * Single-piece folding lid design
+ * Boxy - Single Piece Folding Lid Designer
+ * Classic shoe box design with integrated lid and double-wall construction
  */
 
-function shoeBoxDesigner() {
+function singlePieceFoldingLidDesigner() {
     return {
+        styleName: 'Single Piece Folding Lid',
+        filePrefix: 'single-piece-folding-lid',
+
         box: {
             length: 254,    // L - length of base
             width: 204,     // W - width of base  
@@ -35,6 +38,30 @@ function shoeBoxDesigner() {
             this.$watch('display', () => { }, { deep: true });
         },
 
+        // Calculate pattern dimensions for export
+        getPatternDimensions() {
+            const L = parseFloat(this.box.length);
+            const W = parseFloat(this.box.width);
+            const H = parseFloat(this.box.height);
+            const dustPct = parseFloat(this.box.dustFlapPct);
+            const dust = (dustPct / 100) * (W / 2);
+            const tuck = parseFloat(this.box.tuckFlap);
+            const lidW = Math.min(parseFloat(this.box.lidFlapWidth), H);
+            const lockEnabled = this.box.lockEnabled === true || this.box.lockEnabled === 'true';
+            const slotWidth = parseFloat(this.box.slotWidth);
+
+            const padding = 60;
+            const baseSideWidth = Math.max(lidW, tuck, dust, 2 * H);
+            const sideWidth = lockEnabled ? baseSideWidth + slotWidth : baseSideWidth;
+            const patternW = L + 2 * sideWidth;
+            const patternH = lidW + 2 * H + 2 * W;
+
+            return {
+                totalW: patternW + padding * 2,
+                totalH: patternH + padding * 2
+            };
+        },
+
         generateSVG() {
             const L = parseFloat(this.box.length);
             const W = parseFloat(this.box.width);
@@ -63,12 +90,8 @@ function shoeBoxDesigner() {
             const padding = 60;
 
             // Pattern dimensions - accommodate widest elements on sides
-            // Left/right side needs room for: lidW (lid tuck squares), tuck (top row), dust (front/back), 2*H (base side walls)
-            // Add slotWidth when locks enabled (lock tabs protrude beyond side walls)
             const baseSideWidth = Math.max(lidW, tuck, dust, 2 * H);
             const sideWidth = lockEnabled ? baseSideWidth + slotWidth : baseSideWidth;
-            // Width: sideWidth + L + sideWidth
-            // Height: lidW (lid flap) + W (lid top) + H (front wall) + W (base) + H (back wall)
             const patternW = L + 2 * sideWidth;
             const patternH = lidW + 2 * H + 2 * W;
 
@@ -97,124 +120,93 @@ function shoeBoxDesigner() {
 
             // ==========================================
             // ROW 1: LID FLAP SYSTEM (3 distinct shapes)
-            // 1. Left lid tuck (square with rounded top-left corner)
-            // 2. Main rectangle (L x lidW)
-            // 3. Right lid tuck (square with rounded top-right corner)
-            // Controls: lidW (side length of squares), lidR (corner radius)
-            // Inner vertical edges are FOLD lines - outer edges + tuck bottoms are CUT lines
-            // Only main rectangle bottom (ox to ox+L) is fold line to lid top
             // ==========================================
 
-            // --- SHAPE 1: LEFT LID TUCK - outer left, top, and bottom (not right - that's fold) ---
+            // --- SHAPE 1: LEFT LID TUCK ---
             cuts.push(`M ${ox - lidW} ${y1} L ${ox - lidW} ${oy + lidR} Q ${ox - lidW} ${oy} ${ox - lidW + lidR} ${oy} L ${ox} ${oy}`);
-            cuts.push(`M ${ox - lidW} ${y1} L ${ox} ${y1}`);  // Bottom edge of left tuck
+            cuts.push(`M ${ox - lidW} ${y1} L ${ox} ${y1}`);
 
-            // --- SHAPE 2: MAIN LID FLAP RECTANGLE - top edge only (bottom is fold) ---
+            // --- SHAPE 2: MAIN LID FLAP RECTANGLE ---
             cuts.push(`M ${ox} ${oy} L ${ox + L} ${oy}`);
 
-            // --- SHAPE 3: RIGHT LID TUCK - top, outer right, and bottom (not left - that's fold) ---
+            // --- SHAPE 3: RIGHT LID TUCK ---
             cuts.push(`M ${ox + L} ${oy} L ${ox + L + lidW - lidR} ${oy} Q ${ox + L + lidW} ${oy} ${ox + L + lidW} ${oy + lidR} L ${ox + L + lidW} ${y1}`);
-            cuts.push(`M ${ox + L} ${y1} L ${ox + L + lidW} ${y1}`);  // Bottom edge of right tuck
+            cuts.push(`M ${ox + L} ${y1} L ${ox + L + lidW} ${y1}`);
 
             // --- FOLD LINES ---
-            // Fold between left lid tuck and main rectangle
             folds.push(`M ${ox} ${oy} L ${ox} ${y1}`);
-            // Fold between main rectangle and right lid tuck
             folds.push(`M ${ox + L} ${oy} L ${ox + L} ${y1}`);
-            // Fold: main lid flap to lid top (only center portion)
             folds.push(`M ${ox} ${y1} L ${ox + L} ${y1}`);
 
             // ==========================================
             // ROW 2: LID TOP (LxW) with side tuck flaps
             // ==========================================
-            // Left tuck flap (on lid top) - rounded outer corners, uses tuck width
+            // Left tuck flap
             cuts.push(`M ${ox} ${y1} L ${ox - tuck + tuckR} ${y1}`);
             cuts.push(`M ${ox - tuck + tuckR} ${y1} Q ${ox - tuck} ${y1} ${ox - tuck} ${y1 + tuckR}`);
             cuts.push(`M ${ox - tuck} ${y1 + tuckR} L ${ox - tuck} ${y2 - tuckR}`);
             cuts.push(`M ${ox - tuck} ${y2 - tuckR} Q ${ox - tuck} ${y2} ${ox - tuck + tuckR} ${y2}`);
             cuts.push(`M ${ox - tuck + tuckR} ${y2} L ${ox} ${y2}`);
 
-            // Fold line: lid top to left tuck flap
             folds.push(`M ${ox} ${y1} L ${ox} ${y2}`);
 
-            // Right tuck flap (on lid top) - rounded outer corners, uses tuck width
+            // Right tuck flap
             cuts.push(`M ${ox + L} ${y1} L ${ox + L + tuck - tuckR} ${y1}`);
             cuts.push(`M ${ox + L + tuck - tuckR} ${y1} Q ${ox + L + tuck} ${y1} ${ox + L + tuck} ${y1 + tuckR}`);
             cuts.push(`M ${ox + L + tuck} ${y1 + tuckR} L ${ox + L + tuck} ${y2 - tuckR}`);
             cuts.push(`M ${ox + L + tuck} ${y2 - tuckR} Q ${ox + L + tuck} ${y2} ${ox + L + tuck - tuckR} ${y2}`);
             cuts.push(`M ${ox + L + tuck - tuckR} ${y2} L ${ox + L} ${y2}`);
 
-            // Fold line: lid top to right tuck flap
             folds.push(`M ${ox + L} ${y1} L ${ox + L} ${y2}`);
-
-            // Fold line: lid top to front wall
             folds.push(`M ${ox} ${y2} L ${ox + L} ${y2}`);
 
             // ==========================================
             // ROW 3: FRONT WALL (LxH) with dust flaps
             // ==========================================
-            // Left edge (fold line - dust flap attaches here)
             folds.push(`M ${ox} ${y2} L ${ox} ${y3}`);
-            // Right edge (fold line - dust flap attaches here)
             folds.push(`M ${ox + L} ${y2} L ${ox + L} ${y3}`);
 
-            // Left dust flap (trapezoid with chamfered outer corners)
+            // Left dust flap
             const leftDustOuterTop = y2 + dustOffset;
             const leftDustOuterBottom = y3 - dustOffset;
-            // Top diagonal edge
             cuts.push(`M ${ox} ${y2} L ${ox - dust + dustR} ${leftDustOuterTop}`);
-            // Top-outer chamfer
             cuts.push(`M ${ox - dust + dustR} ${leftDustOuterTop} L ${ox - dust} ${leftDustOuterTop + dustR}`);
-            // Outer vertical edge
             cuts.push(`M ${ox - dust} ${leftDustOuterTop + dustR} L ${ox - dust} ${leftDustOuterBottom - dustR}`);
-            // Bottom-outer chamfer
             cuts.push(`M ${ox - dust} ${leftDustOuterBottom - dustR} L ${ox - dust + dustR} ${leftDustOuterBottom}`);
-            // Bottom diagonal edge
             cuts.push(`M ${ox - dust + dustR} ${leftDustOuterBottom} L ${ox} ${y3}`);
 
-            // Right dust flap (trapezoid with chamfered outer corners)
+            // Right dust flap
             const rightDustOuterTop = y2 + dustOffset;
             const rightDustOuterBottom = y3 - dustOffset;
-            // Top diagonal edge
             cuts.push(`M ${ox + L} ${y2} L ${ox + L + dust - dustR} ${rightDustOuterTop}`);
-            // Top-outer chamfer
             cuts.push(`M ${ox + L + dust - dustR} ${rightDustOuterTop} L ${ox + L + dust} ${rightDustOuterTop + dustR}`);
-            // Outer vertical edge
             cuts.push(`M ${ox + L + dust} ${rightDustOuterTop + dustR} L ${ox + L + dust} ${rightDustOuterBottom - dustR}`);
-            // Bottom-outer chamfer
             cuts.push(`M ${ox + L + dust} ${rightDustOuterBottom - dustR} L ${ox + L + dust - dustR} ${rightDustOuterBottom}`);
-            // Bottom diagonal edge
             cuts.push(`M ${ox + L + dust - dustR} ${rightDustOuterBottom} L ${ox + L} ${y3}`);
 
-            // Fold line: front wall to base
             folds.push(`M ${ox} ${y3} L ${ox + L} ${y3}`);
 
             // ==========================================
             // ROW 4: BASE (LxW) with side walls
             // ==========================================
-            // Fold lines from base to inner panels
-            // When lock system enabled, these fold lines are broken into segments around slots
             if (lockEnabled) {
-                // Calculate slot positions (same as lock system below)
                 const totalLockHeight = (lockCount * lockLength) + ((lockCount - 1) * lockGap);
                 const lockStartY = y3 + (W - totalLockHeight) / 2;
 
-                // LEFT fold line (ox) - segments around slots
+                // LEFT fold line
                 let lastY = y3;
                 for (let i = 0; i < lockCount; i++) {
                     const slotY = lockStartY + i * (lockLength + lockGap);
-                    // Fold segment before this slot
                     if (slotY > lastY) {
                         folds.push(`M ${ox} ${lastY} L ${ox} ${slotY}`);
                     }
                     lastY = slotY + lockLength;
                 }
-                // Fold segment after last slot
                 if (lastY < y4) {
                     folds.push(`M ${ox} ${lastY} L ${ox} ${y4}`);
                 }
 
-                // RIGHT fold line (ox + L) - segments around slots
+                // RIGHT fold line
                 lastY = y3;
                 for (let i = 0; i < lockCount; i++) {
                     const slotY = lockStartY + i * (lockLength + lockGap);
@@ -227,22 +219,17 @@ function shoeBoxDesigner() {
                     folds.push(`M ${ox + L} ${lastY} L ${ox + L} ${y4}`);
                 }
             } else {
-                // No locks - continuous fold lines
                 folds.push(`M ${ox} ${y3} L ${ox} ${y4}`);
                 folds.push(`M ${ox + L} ${y3} L ${ox + L} ${y4}`);
             }
 
-            // LEFT INNER PANEL (WxH) - between base and left side wall
+            // LEFT INNER PANEL
             folds.push(`M ${xL1} ${y3} L ${xL1} ${y4}`);
-            // Top edge
             cuts.push(`M ${ox} ${y3} L ${xL1} ${y3}`);
-            // Bottom edge
             cuts.push(`M ${ox} ${y4} L ${xL1} ${y4}`);
 
-            // LEFT SIDE WALL (WxH) - square corners
-            // Top edge
+            // LEFT SIDE WALL
             cuts.push(`M ${xL1} ${y3} L ${xL2} ${y3}`);
-            // Left edge - segmented when locks enabled (lock tabs attach here)
             if (lockEnabled) {
                 const totalLockHeight2 = (lockCount * lockLength) + ((lockCount - 1) * lockGap);
                 const lockStartY2 = y3 + (W - totalLockHeight2) / 2;
@@ -260,20 +247,15 @@ function shoeBoxDesigner() {
             } else {
                 cuts.push(`M ${xL2} ${y3} L ${xL2} ${y4}`);
             }
-            // Bottom edge
             cuts.push(`M ${xL2} ${y4} L ${xL1} ${y4}`);
 
-            // RIGHT INNER PANEL (WxH)
+            // RIGHT INNER PANEL
             folds.push(`M ${ox + L + H} ${y3} L ${ox + L + H} ${y4}`);
-            // Top edge
             cuts.push(`M ${ox + L} ${y3} L ${ox + L + H} ${y3}`);
-            // Bottom edge
             cuts.push(`M ${ox + L} ${y4} L ${ox + L + H} ${y4}`);
 
-            // RIGHT SIDE WALL (WxH) - square corners
-            // Top edge
+            // RIGHT SIDE WALL
             cuts.push(`M ${ox + L + H} ${y3} L ${xR2} ${y3}`);
-            // Right edge - segmented when locks enabled (lock tabs attach here)
             if (lockEnabled) {
                 const totalLockHeight3 = (lockCount * lockLength) + ((lockCount - 1) * lockGap);
                 const lockStartY3 = y3 + (W - totalLockHeight3) / 2;
@@ -291,90 +273,62 @@ function shoeBoxDesigner() {
             } else {
                 cuts.push(`M ${xR2} ${y3} L ${xR2} ${y4}`);
             }
-            // Bottom edge
             cuts.push(`M ${xR2} ${y4} L ${ox + L + H} ${y4}`);
 
-            // Fold line: base to back wall
             folds.push(`M ${ox} ${y4} L ${ox + L} ${y4}`);
 
             // ==========================================
             // DOUBLE WALL LOCK SYSTEM
-            // Lock tabs protrude from outer side walls (xL2/xR2)
-            // Slots straddle the base-to-inner-panel fold lines (ox/ox+L)
-            // Slot is a rectangular hole - all edges are cuts
-            // The fold line continues through the slot area as a fold
             // ==========================================
             if (lockEnabled) {
-                // Calculate total height needed for locks and gaps
                 const totalLockHeight = (lockCount * lockLength) + ((lockCount - 1) * lockGap);
-                // Start Y position (centered vertically on base row)
                 const lockStartY = y3 + (W - totalLockHeight) / 2;
 
-                // Generate locks and slots for each position
                 for (let i = 0; i < lockCount; i++) {
                     const lockY = lockStartY + i * (lockLength + lockGap);
                     const lockYEnd = lockY + lockLength;
 
                     // LEFT SIDE
-                    // Lock tab: protrudes left from outer side wall edge (xL2)
                     cuts.push(`M ${xL2} ${lockY} L ${xL2 - slotWidth} ${lockY} L ${xL2 - slotWidth} ${lockYEnd} L ${xL2} ${lockYEnd}`);
-                    // Slot: rectangular hole straddling the fold line at ox
-                    cuts.push(`M ${ox - slotWidth} ${lockY} L ${ox + slotWidth} ${lockY}`);  // Top
-                    cuts.push(`M ${ox + slotWidth} ${lockY} L ${ox + slotWidth} ${lockYEnd}`); // Right
-                    cuts.push(`M ${ox + slotWidth} ${lockYEnd} L ${ox - slotWidth} ${lockYEnd}`); // Bottom
-                    cuts.push(`M ${ox - slotWidth} ${lockYEnd} L ${ox - slotWidth} ${lockY}`); // Left
-                    // Fold line continues through slot
+                    cuts.push(`M ${ox - slotWidth} ${lockY} L ${ox + slotWidth} ${lockY}`);
+                    cuts.push(`M ${ox + slotWidth} ${lockY} L ${ox + slotWidth} ${lockYEnd}`);
+                    cuts.push(`M ${ox + slotWidth} ${lockYEnd} L ${ox - slotWidth} ${lockYEnd}`);
+                    cuts.push(`M ${ox - slotWidth} ${lockYEnd} L ${ox - slotWidth} ${lockY}`);
                     folds.push(`M ${ox} ${lockY} L ${ox} ${lockYEnd}`);
 
                     // RIGHT SIDE
-                    // Lock tab: protrudes right from outer side wall edge (xR2)
                     cuts.push(`M ${xR2} ${lockY} L ${xR2 + slotWidth} ${lockY} L ${xR2 + slotWidth} ${lockYEnd} L ${xR2} ${lockYEnd}`);
-                    // Slot: rectangular hole straddling the fold line at ox+L
-                    cuts.push(`M ${ox + L - slotWidth} ${lockY} L ${ox + L + slotWidth} ${lockY}`);  // Top
-                    cuts.push(`M ${ox + L + slotWidth} ${lockY} L ${ox + L + slotWidth} ${lockYEnd}`); // Right
-                    cuts.push(`M ${ox + L + slotWidth} ${lockYEnd} L ${ox + L - slotWidth} ${lockYEnd}`); // Bottom
-                    cuts.push(`M ${ox + L - slotWidth} ${lockYEnd} L ${ox + L - slotWidth} ${lockY}`); // Left
-                    // Fold line continues through slot
+                    cuts.push(`M ${ox + L - slotWidth} ${lockY} L ${ox + L + slotWidth} ${lockY}`);
+                    cuts.push(`M ${ox + L + slotWidth} ${lockY} L ${ox + L + slotWidth} ${lockYEnd}`);
+                    cuts.push(`M ${ox + L + slotWidth} ${lockYEnd} L ${ox + L - slotWidth} ${lockYEnd}`);
+                    cuts.push(`M ${ox + L - slotWidth} ${lockYEnd} L ${ox + L - slotWidth} ${lockY}`);
                     folds.push(`M ${ox + L} ${lockY} L ${ox + L} ${lockYEnd}`);
                 }
             }
 
             // ==========================================
-            // ROW 5: BACK WALL (LxH) with side wall double-layers
+            // ROW 5: BACK WALL (LxH) with dust flaps
             // ==========================================
-            // Left edge (fold line - dust flap attaches here)
             folds.push(`M ${ox} ${y4} L ${ox} ${y5}`);
-            // Right edge (fold line - dust flap attaches here)
             folds.push(`M ${ox + L} ${y4} L ${ox + L} ${y5}`);
-            // Bottom edge
             cuts.push(`M ${ox} ${y5} L ${ox + L} ${y5}`);
 
-            // Left dust flap (trapezoid with chamfered outer corners)
+            // Left dust flap
             const leftDustOuterTop2 = y4 + dustOffset;
             const leftDustOuterBottom2 = y5 - dustOffset;
-            // Top diagonal edge
             cuts.push(`M ${ox} ${y4} L ${ox - dust + dustR} ${leftDustOuterTop2}`);
-            // Top-outer chamfer
             cuts.push(`M ${ox - dust + dustR} ${leftDustOuterTop2} L ${ox - dust} ${leftDustOuterTop2 + dustR}`);
-            // Outer vertical edge
             cuts.push(`M ${ox - dust} ${leftDustOuterTop2 + dustR} L ${ox - dust} ${leftDustOuterBottom2 - dustR}`);
-            // Bottom-outer chamfer
             cuts.push(`M ${ox - dust} ${leftDustOuterBottom2 - dustR} L ${ox - dust + dustR} ${leftDustOuterBottom2}`);
-            // Bottom diagonal edge
             cuts.push(`M ${ox - dust + dustR} ${leftDustOuterBottom2} L ${ox} ${y5}`);
 
-            // Right dust flap (trapezoid with chamfered outer corners)
+            // Right dust flap
             const rightDustOuterTop2 = y4 + dustOffset;
             const rightDustOuterBottom2 = y5 - dustOffset;
-            // Top diagonal edge
             cuts.push(`M ${ox + L} ${y4} L ${ox + L + dust - dustR} ${rightDustOuterTop2}`);
-            // Top-outer chamfer
             cuts.push(`M ${ox + L + dust - dustR} ${rightDustOuterTop2} L ${ox + L + dust} ${rightDustOuterTop2 + dustR}`);
-            // Outer vertical edge
             cuts.push(`M ${ox + L + dust} ${rightDustOuterTop2 + dustR} L ${ox + L + dust} ${rightDustOuterBottom2 - dustR}`);
-            // Bottom-outer chamfer
             cuts.push(`M ${ox + L + dust} ${rightDustOuterBottom2 - dustR} L ${ox + L + dust - dustR} ${rightDustOuterBottom2}`);
-            // Bottom diagonal edge
             cuts.push(`M ${ox + L + dust - dustR} ${rightDustOuterBottom2} L ${ox + L} ${y5}`);
 
             // ==========================================
@@ -382,7 +336,6 @@ function shoeBoxDesigner() {
             // ==========================================
             let svg = `<svg id="box-svg" width="${svgW}" height="${svgH}" viewBox="0 0 ${patternW + padding * 2} ${patternH + padding * 2}" xmlns="http://www.w3.org/2000/svg">`;
 
-            // Embed styles in SVG for proper export
             svg += `<style>
                 .cut-line { stroke: #1f2937; stroke-width: 1.5; fill: none; }
                 .fold-line { stroke: #3b82f6; stroke-width: 1; stroke-dasharray: 8, 4; fill: none; }
@@ -396,7 +349,7 @@ function shoeBoxDesigner() {
 
             // Draw grid
             if (this.display.showGrid) {
-                const gridSize = 10; // 10mm grid
+                const gridSize = 10;
                 const totalW = patternW + padding * 2;
                 const totalH = patternH + padding * 2;
                 for (let x = 0; x <= totalW; x += gridSize) {
@@ -407,12 +360,12 @@ function shoeBoxDesigner() {
                 }
             }
 
-            // Draw cuts (solid lines)
+            // Draw cuts
             cuts.forEach(path => {
                 svg += `<path d="${path}" class="cut-line"/>`;
             });
 
-            // Draw folds (dashed lines)
+            // Draw folds
             folds.forEach(path => {
                 svg += `<path d="${path}" class="fold-line"/>`;
             });
@@ -445,23 +398,18 @@ function shoeBoxDesigner() {
 
             // Dimensions
             if (this.display.showDimensions) {
-                // Overall width dimension (very top)
                 svg += `<line x1="${padding}" y1="${padding - 35}" x2="${padding + patternW}" y2="${padding - 35}" class="dimension-line"/>`;
                 svg += `<text x="${padding + patternW / 2}" y="${padding - 42}" class="dimension-text" text-anchor="middle">Overall: ${Math.round(patternW)}mm x ${Math.round(patternH)}mm</text>`;
 
-                // L dimension (top)
                 svg += `<line x1="${ox}" y1="${oy - 15}" x2="${ox + L}" y2="${oy - 15}" class="dimension-line"/>`;
                 svg += `<text x="${ox + L / 2}" y="${oy - 25}" class="dimension-text" text-anchor="middle">L = ${L}mm</text>`;
 
-                // W dimension (right side)
                 svg += `<line x1="${xR2 + 20}" y1="${y3}" x2="${xR2 + 20}" y2="${y4}" class="dimension-line"/>`;
                 svg += `<text x="${xR2 + 35}" y="${y3 + W / 2}" class="dimension-text" text-anchor="middle" transform="rotate(90,${xR2 + 35},${y3 + W / 2})">W = ${W}mm</text>`;
 
-                // H dimension (left side)
                 svg += `<line x1="${xL2 - 20}" y1="${y4}" x2="${xL2 - 20}" y2="${y5}" class="dimension-line"/>`;
                 svg += `<text x="${xL2 - 35}" y="${y4 + H / 2}" class="dimension-text" text-anchor="middle" transform="rotate(-90,${xL2 - 35},${y4 + H / 2})">H = ${H}mm</text>`;
 
-                // Overall height dimension (far right)
                 svg += `<line x1="${padding + patternW + 15}" y1="${padding}" x2="${padding + patternW + 15}" y2="${padding + patternH}" class="dimension-line"/>`;
                 svg += `<text x="${padding + patternW + 30}" y="${padding + patternH / 2}" class="dimension-text" text-anchor="middle" transform="rotate(90,${padding + patternW + 30},${padding + patternH / 2})">${Math.round(patternH)}mm</text>`;
             }
@@ -470,119 +418,37 @@ function shoeBoxDesigner() {
             return svg;
         },
 
-        // Generate SVG at 1:1 scale (1 unit = 1mm) for export
-        generateExportSVG() {
-            const L = parseFloat(this.box.length);
-            const W = parseFloat(this.box.width);
-            const H = parseFloat(this.box.height);
-            const dustPct = parseFloat(this.box.dustFlapPct);
-            const dust = (dustPct / 100) * (W / 2);
-            const tuck = parseFloat(this.box.tuckFlap);
-            const lidW = Math.min(parseFloat(this.box.lidFlapWidth), H);
-            const lockEnabled = this.box.lockEnabled;
-            const slotWidth = parseFloat(this.box.slotWidth);
-
-            const padding = 60;
-            const baseSideWidth = Math.max(lidW, tuck, dust, 2 * H);
-            const sideWidth = lockEnabled ? baseSideWidth + slotWidth : baseSideWidth;
-            const patternW = L + 2 * sideWidth;
-            const patternH = lidW + 2 * H + 2 * W;
-            const totalW = patternW + padding * 2;
-            const totalH = patternH + padding * 2;
-
-            // Get the displayed SVG and modify for 1:1 export
-            const displaySVG = this.generateSVG();
-            // Replace the width/height/viewBox to be 1:1 scale in mm
-            return displaySVG.replace(
-                /<svg id="box-svg"[^>]*>/,
-                `<svg id="box-svg" width="${totalW}mm" height="${totalH}mm" viewBox="0 0 ${totalW} ${totalH}" xmlns="http://www.w3.org/2000/svg">`
+        // Export functions using universal export module
+        exportSVG() {
+            BoxyExport.exportSVG(
+                () => this.generateSVG(),
+                this.getPatternDimensions(),
+                `${this.filePrefix}.svg`
             );
         },
 
-        // Export functions
-        exportSVG() {
-            const data = this.generateExportSVG();
-            const blob = new Blob([data], { type: 'image/svg+xml' });
-            this.download(blob, 'shoebox.svg');
-        },
-
         exportPNG() {
-            const data = this.generateExportSVG();
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            const img = new Image();
-
-            img.onload = () => {
-                // 3.78 pixels per mm at 96 DPI
-                canvas.width = img.width;
-                canvas.height = img.height;
-                ctx.fillStyle = 'white';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                ctx.drawImage(img, 0, 0);
-                canvas.toBlob(blob => this.download(blob, 'shoebox.png'), 'image/png');
-            };
-            img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(data)));
+            BoxyExport.exportPNG(
+                () => this.generateSVG(),
+                this.getPatternDimensions(),
+                `${this.filePrefix}.png`
+            );
         },
 
         exportPDF() {
-            const L = parseFloat(this.box.length);
-            const W = parseFloat(this.box.width);
-            const H = parseFloat(this.box.height);
-            const dustPct = parseFloat(this.box.dustFlapPct);
-            const dust = (dustPct / 100) * (W / 2);
-            const tuck = parseFloat(this.box.tuckFlap);
-            const lidW = Math.min(parseFloat(this.box.lidFlapWidth), H);
-            const lockEnabled = this.box.lockEnabled;
-            const slotWidth = parseFloat(this.box.slotWidth);
-
-            const padding = 60;
-            const baseSideWidth = Math.max(lidW, tuck, dust, 2 * H);
-            const sideWidth = lockEnabled ? baseSideWidth + slotWidth : baseSideWidth;
-            const patternW = L + 2 * sideWidth;
-            const patternH = lidW + 2 * H + 2 * W;
-            const totalW = patternW + padding * 2;
-            const totalH = patternH + padding * 2;
-
-            const data = this.generateExportSVG();
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            const img = new Image();
-
-            img.onload = () => {
-                // High res for PDF
-                const scale = 3;
-                canvas.width = img.width * scale;
-                canvas.height = img.height * scale;
-                ctx.fillStyle = 'white';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-                const { jsPDF } = window.jspdf;
-                // Create PDF with exact mm dimensions
-                const pdf = new jsPDF({
-                    orientation: totalW > totalH ? 'landscape' : 'portrait',
-                    unit: 'mm',
-                    format: [totalW, totalH]
-                });
-
-                pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, totalW, totalH);
-                pdf.save('shoebox.pdf');
-            };
-            img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(data)));
+            BoxyExport.exportPDF(
+                () => this.generateSVG(),
+                this.getPatternDimensions(),
+                `${this.filePrefix}.pdf`
+            );
         },
 
         exportDXF() {
-            const blob = new Blob(['DXF export - convert SVG paths'], { type: 'application/dxf' });
-            this.download(blob, 'shoebox.dxf');
-        },
-
-        download(blob, filename) {
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename;
-            a.click();
-            URL.revokeObjectURL(url);
+            BoxyExport.exportDXF(
+                () => this.generateSVG(),
+                this.getPatternDimensions(),
+                `${this.filePrefix}.dxf`
+            );
         }
     };
 }
